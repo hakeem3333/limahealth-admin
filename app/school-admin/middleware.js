@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export const config = {
   matcher: [
@@ -13,7 +13,7 @@ export const config = {
  * Expects JWT stored in cookies: `token`
  * Verifies role before allowing access.
  */
-export async function middleware(req: NextRequest) {
+export async function middleware(req) {
   const token = req.cookies.get("token")?.value;
 
   if (!token) {
@@ -23,13 +23,12 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-    // Verify token (assuming JWT structure)
+    // Decode JWT (without signature verification)
     const payload = JSON.parse(
       Buffer.from(token.split(".")[1], "base64").toString("utf-8")
     );
 
     const role = payload.role; // e.g., "schoolAdmin" or "superAdmin"
-
     const pathname = req.nextUrl.pathname;
 
     if (pathname.startsWith("/school-admin") && role !== "schoolAdmin") {
@@ -52,8 +51,8 @@ export async function middleware(req: NextRequest) {
    Helpers
 ------------------------------ */
 
-function unauthorized(req: NextRequest) {
+function unauthorized(req) {
   const url = req.nextUrl.clone();
-  url.pathname = "/403"; // Create a 403 page for forbidden
+  url.pathname = "/403"; // Redirect to 403 page
   return NextResponse.rewrite(url);
 }

@@ -10,7 +10,7 @@ import { api } from "@/lib/axios";
  */
 export default function CounselorProfilePage() {
   const params = useParams();
-  const counselorId = params.counselorId as string;
+  const counselorId = params.counselorId;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["counselor-profile", counselorId],
@@ -24,9 +24,7 @@ export default function CounselorProfilePage() {
 
   if (error) {
     return (
-      <div className="text-red-600">
-        Failed to load counselor profile.
-      </div>
+      <div className="text-red-600">Failed to load counselor profile.</div>
     );
   }
 
@@ -53,15 +51,11 @@ export default function CounselorProfilePage() {
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <InfoCard title="Assigned Students">
-          <p className="text-2xl font-bold">
-            {data.students.length}
-          </p>
+          <p className="text-2xl font-bold">{data.students.length}</p>
         </InfoCard>
 
         <InfoCard title="Active Alerts">
-          <p className="text-2xl font-bold">
-            {data.activeAlerts}
-          </p>
+          <p className="text-2xl font-bold">{data.activeAlerts}</p>
         </InfoCard>
 
         <InfoCard title="Last Activity">
@@ -76,9 +70,7 @@ export default function CounselorProfilePage() {
       {/* Assigned Students */}
       <Section title="Assigned Students">
         {data.students.length === 0 ? (
-          <p className="text-muted-foreground">
-            No students assigned.
-          </p>
+          <p className="text-muted-foreground">No students assigned.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-sm">
@@ -91,7 +83,7 @@ export default function CounselorProfilePage() {
                 </tr>
               </thead>
               <tbody>
-                {data.students.map((student: any) => (
+                {data.students.map((student) => (
                   <tr key={student.id} className="border-t">
                     <TableCell>{student.name}</TableCell>
                     <TableCell>
@@ -119,21 +111,17 @@ export default function CounselorProfilePage() {
       {/* Recent Interventions */}
       <Section title="Recent Interventions">
         {data.interventions.length === 0 ? (
-          <p className="text-muted-foreground">
-            No interventions recorded.
-          </p>
+          <p className="text-muted-foreground">No interventions recorded.</p>
         ) : (
           <ul className="space-y-2">
-            {data.interventions.map((i: any) => (
+            {data.interventions.map((i) => (
               <li
                 key={i.id}
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div>
                   <p className="font-medium">{i.studentName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {i.note}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{i.note}</p>
                 </div>
                 <span className="text-xs text-muted-foreground">
                   {new Date(i.createdAt).toLocaleDateString()}
@@ -146,22 +134,16 @@ export default function CounselorProfilePage() {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3">
-        <ActionButton href="#">
-          Assign Students
-        </ActionButton>
-        <ActionButton href="#">
-          Deactivate Counselor
-        </ActionButton>
+        <ActionButton href="#">Assign Students</ActionButton>
+        <ActionButton href="#">Deactivate Counselor</ActionButton>
       </div>
     </div>
   );
 }
 
-/* -----------------------------
-   UI Components
------------------------------- */
+/* ----------------------------- UI Components ----------------------------- */
 
-function Section({ title, children }: any) {
+function Section({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
@@ -170,7 +152,7 @@ function Section({ title, children }: any) {
   );
 }
 
-function InfoCard({ title, children }: any) {
+function InfoCard({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <p className="text-sm text-muted-foreground mb-2">{title}</p>
@@ -179,7 +161,7 @@ function InfoCard({ title, children }: any) {
   );
 }
 
-function TableHead({ children }: any) {
+function TableHead({ children }) {
   return (
     <th className="px-4 py-3 text-left font-medium text-muted-foreground">
       {children}
@@ -187,21 +169,15 @@ function TableHead({ children }: any) {
   );
 }
 
-function TableCell({ children, className = "" }: any) {
-  return (
-    <td className={`px-4 py-3 ${className}`}>
-      {children}
-    </td>
-  );
+function TableCell({ children, className = "" }) {
+  return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ active }) {
   return (
     <span
       className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
-        active
-          ? "bg-green-100 text-green-700"
-          : "bg-gray-200 text-gray-700"
+        active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-700"
       }`}
     >
       {active ? "Active" : "Inactive"}
@@ -209,7 +185,7 @@ function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
-function RiskBadge({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
+function RiskBadge({ level }) {
   const styles = {
     LOW: "bg-green-100 text-green-700",
     MEDIUM: "bg-yellow-100 text-yellow-800",
@@ -225,7 +201,7 @@ function RiskBadge({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
   );
 }
 
-function ActionButton({ children, href }: any) {
+function ActionButton({ children, href }) {
   return (
     <Link
       href={href}

@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import {
   BuildingStorefrontIcon,
   UserGroupIcon,
@@ -9,17 +11,13 @@ import {
   HomeIcon,
   Bars3Icon,
   XMarkIcon,
-  LogoutIcon,
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
-
-interface LayoutProps {
-  children: ReactNode;
-}
 
 /**
  * SuperAdmin Layout with Sidebar
  */
-export default function SuperAdminLayout({ children }: LayoutProps) {
+export default function SuperAdminLayout({ children }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -41,11 +39,12 @@ export default function SuperAdminLayout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      {/* Sidebar */}
-      <aside className="hidden md:flex md:flex-col md:w-64 md:border-r md:border-gray-200 dark:md:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700">
+      {/* Sidebar (Desktop) */}
+      <aside className="hidden md:flex md:flex-col md:w-64 border-r bg-white dark:bg-gray-800">
+        <div className="flex items-center justify-center h-16 border-b">
           <h1 className="text-xl font-bold">LimaHealth SuperAdmin</h1>
         </div>
+
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => (
             <SidebarLink
@@ -60,61 +59,61 @@ export default function SuperAdminLayout({ children }: LayoutProps) {
         </nav>
       </aside>
 
-      {/* Mobile Sidebar */}
-      <div
-        className={`fixed inset-0 z-50 md:hidden ${
-          sidebarOpen ? "" : "hidden"
-        }`}
-      >
-        <div
-          className="absolute inset-0 bg-black opacity-50"
-          onClick={() => setSidebarOpen(false)}
-        />
-        <aside className="absolute left-0 top-0 w-64 h-full bg-white dark:bg-gray-800 shadow-lg p-4">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-xl font-bold">LimaHealth SuperAdmin</h1>
-            <button onClick={() => setSidebarOpen(false)}>
-              <XMarkIcon className="h-6 w-6" />
-            </button>
-          </div>
-          <nav className="space-y-2">
-            {navItems.map((item) => (
-              <SidebarLink
-                key={item.href}
-                href={item.href}
-                icon={item.icon}
-                active={pathname.startsWith(item.href)}
-                onClick={() => setSidebarOpen(false)}
-              >
-                {item.label}
-              </SidebarLink>
-            ))}
-          </nav>
-        </aside>
-      </div>
+      {/* Sidebar (Mobile) */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className="absolute left-0 top-0 w-64 h-full bg-white dark:bg-gray-800 p-4 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-xl font-bold">LimaHealth</h1>
+              <button onClick={() => setSidebarOpen(false)}>
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
 
-      {/* Main content */}
+            <nav className="space-y-2">
+              {navItems.map((item) => (
+                <SidebarLink
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  active={pathname.startsWith(item.href)}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  {item.label}
+                </SidebarLink>
+              ))}
+            </nav>
+          </aside>
+        </div>
+      )}
+
+      {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top Header */}
-        <header className="flex items-center justify-between h-16 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        {/* Header */}
+        <header className="flex items-center justify-between h-16 px-4 bg-white dark:bg-gray-800 border-b">
           <button
-            className="md:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            className="md:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
             onClick={() => setSidebarOpen(true)}
           >
             <Bars3Icon className="h-6 w-6" />
           </button>
-          <div className="flex items-center space-x-4">
+
+          <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-muted-foreground">
               SuperAdmin
             </span>
-            <button className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-1">
-              <LogoutIcon className="h-5 w-5" />
+            <button className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+              <ArrowRightOnRectangleIcon className="h-5 w-5" />
               Logout
             </button>
           </div>
         </header>
 
-        {/* Page content */}
+        {/* Page Content */}
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
     </div>
@@ -125,21 +124,7 @@ export default function SuperAdminLayout({ children }: LayoutProps) {
    Sidebar Link Component
 ------------------------------ */
 
-interface SidebarLinkProps {
-  href: string;
-  icon: any;
-  children: ReactNode;
-  active?: boolean;
-  onClick?: () => void;
-}
-
-function SidebarLink({
-  href,
-  icon: Icon,
-  children,
-  active,
-  onClick,
-}: SidebarLinkProps) {
+function SidebarLink({ href, icon: Icon, children, active, onClick }) {
   return (
     <Link
       href={href}

@@ -4,22 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/lib/axios";
 
-interface AuditLog {
-  id: string;
-  actorName: string;
-  actorRole: "SUPER_ADMIN" | "SCHOOL_ADMIN";
-  action: string;
-  targetType: string;
-  targetId: string | null;
-  ipAddress: string;
-  createdAt: string;
-}
-
 export default function AuditLogsPage() {
   const [action, setAction] = useState("");
   const [actorRole, setActorRole] = useState("");
 
-  const { data, isLoading, error } = useQuery<AuditLog[]>({
+  const {
+    data = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["audit-logs", action, actorRole],
     queryFn: async () => {
       const res = await api.get("/super-admin/audit-logs", {
@@ -90,9 +83,7 @@ export default function AuditLogsPage() {
                   )}
                 </Td>
                 <Td>{log.ipAddress}</Td>
-                <Td>
-                  {new Date(log.createdAt).toLocaleString()}
-                </Td>
+                <Td>{new Date(log.createdAt).toLocaleString()}</Td>
               </tr>
             ))}
           </tbody>
@@ -106,7 +97,7 @@ export default function AuditLogsPage() {
    Table Helpers
 ------------------------------ */
 
-function Th({ children }: any) {
+function Th({ children }) {
   return (
     <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
       {children}
@@ -114,6 +105,6 @@ function Th({ children }: any) {
   );
 }
 
-function Td({ children }: any) {
+function Td({ children }) {
   return <td className="px-4 py-3">{children}</td>;
 }

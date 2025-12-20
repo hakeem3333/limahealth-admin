@@ -1,6 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { useState } from "react";
 import {
   UsersIcon,
   UserIcon,
@@ -13,14 +15,10 @@ import {
   LogoutIcon,
 } from "@heroicons/react/24/outline";
 
-interface LayoutProps {
-  children: ReactNode;
-}
-
 /**
  * School Admin Layout with Sidebar
  */
-export default function SchoolAdminLayout({ children }: LayoutProps) {
+export default function SchoolAdminLayout({ children }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -122,22 +120,7 @@ export default function SchoolAdminLayout({ children }: LayoutProps) {
 /* -----------------------------
    Sidebar Link Component
 ------------------------------ */
-
-interface SidebarLinkProps {
-  href: string;
-  icon: any;
-  children: ReactNode;
-  active?: boolean;
-  onClick?: () => void;
-}
-
-function SidebarLink({
-  href,
-  icon: Icon,
-  children,
-  active,
-  onClick,
-}: SidebarLinkProps) {
+function SidebarLink({ href, icon: Icon, children, active, onClick }) {
   return (
     <Link
       href={href}

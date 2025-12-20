@@ -48,7 +48,7 @@ export default function SuperAdminDashboardPage() {
    UI Components
 ------------------------------ */
 
-function StatCard({ title, value }: { title: string, value: number }) {
+function StatCard({ title, value }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <p className="text-sm text-muted-foreground">{title}</p>
@@ -57,7 +57,7 @@ function StatCard({ title, value }: { title: string, value: number }) {
   );
 }
 
-function QuickLink({ href, label }: { href: string, label: string }) {
+function QuickLink({ href, label }) {
   return (
     <Link
       href={href}

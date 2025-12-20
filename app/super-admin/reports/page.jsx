@@ -4,21 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/lib/axios";
 
-type Range = "7d" | "30d" | "90d";
-
-interface ReportSummary {
-  schools: number;
-  students: number;
-  admins: number;
-  alerts: number;
-  highRiskStudents: number;
-  wearableLinked: number;
-}
-
 export default function SuperAdminReportsPage() {
-  const [range, setRange] = useState<Range>("30d");
+  const [range, setRange] = useState("30d");
 
-  const { data, isLoading, error } = useQuery<ReportSummary>({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["super-admin-reports", range],
     queryFn: async () => {
       const res = await api.get("/super-admin/reports", {
@@ -46,7 +35,7 @@ export default function SuperAdminReportsPage() {
         <span className="text-sm font-medium">Date Range:</span>
         <select
           value={range}
-          onChange={(e) => setRange(e.target.value as Range)}
+          onChange={(e) => setRange(e.target.value)}
           className="rounded-md border px-3 py-1 text-sm"
         >
           <option value="7d">Last 7 days</option>
@@ -69,7 +58,8 @@ export default function SuperAdminReportsPage() {
       <div className="rounded-xl border bg-white dark:bg-gray-900 p-6">
         <h2 className="font-semibold mb-2">Trends</h2>
         <p className="text-sm text-muted-foreground">
-          Charts (stress trends, alert frequency, wearable adoption) will appear here.
+          Charts (stress trends, alert frequency, wearable adoption) will appear
+          here.
         </p>
       </div>
     </div>
@@ -80,7 +70,7 @@ export default function SuperAdminReportsPage() {
    UI Components
 ------------------------------ */
 
-function StatCard({ title, value }: { title: string; value: number }) {
+function StatCard({ title, value }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <p className="text-xs text-muted-foreground uppercase tracking-wide">

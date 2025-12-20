@@ -10,7 +10,7 @@ import Link from "next/link";
  */
 export default function StudentProfilePage() {
   const params = useParams();
-  const studentId = params.studentId as string;
+  const studentId = params.studentId;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["student-profile", studentId],
@@ -23,11 +23,7 @@ export default function StudentProfilePage() {
   if (isLoading) return <ProfileSkeleton />;
 
   if (error) {
-    return (
-      <div className="text-red-600">
-        Failed to load student profile.
-      </div>
-    );
+    return <div className="text-red-600">Failed to load student profile.</div>;
   }
 
   return (
@@ -69,17 +65,21 @@ export default function StudentProfilePage() {
         </InfoCard>
 
         <InfoCard title="Assigned Counselor">
-          <p className="text-sm">
-            {data.counselor?.name ?? "Not assigned"}
-          </p>
+          <p className="text-sm">{data.counselor?.name ?? "Not assigned"}</p>
         </InfoCard>
       </div>
 
       {/* Wellness Summary */}
       <Section title="Wellness Summary">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Metric label="Avg Stress (7 days)" value={data.metrics.avgStress7d} />
-          <Metric label="Avg Sleep (7 days)" value={`${data.metrics.avgSleep7d} hrs`} />
+          <Metric
+            label="Avg Stress (7 days)"
+            value={data.metrics.avgStress7d}
+          />
+          <Metric
+            label="Avg Sleep (7 days)"
+            value={`${data.metrics.avgSleep7d} hrs`}
+          />
           <Metric label="Activity Score" value={data.metrics.activityScore} />
         </div>
       </Section>
@@ -87,20 +87,16 @@ export default function StudentProfilePage() {
       {/* Recent Alerts */}
       <Section title="Recent Alerts">
         {data.alerts.length === 0 ? (
-          <p className="text-muted-foreground">
-            No alerts for this student 🎉
-          </p>
+          <p className="text-muted-foreground">No alerts for this student 🎉</p>
         ) : (
           <ul className="space-y-2">
-            {data.alerts.map((alert: any) => (
+            {data.alerts.map((alert) => (
               <li
                 key={alert.id}
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div>
-                  <p className="font-medium">
-                    {alert.type}
-                  </p>
+                  <p className="font-medium">{alert.type}</p>
                   <p className="text-sm text-muted-foreground">
                     Risk: {alert.riskLevel} •{" "}
                     {new Date(alert.createdAt).toLocaleDateString()}
@@ -121,9 +117,7 @@ export default function StudentProfilePage() {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3">
-        <ActionButton href="/school-admin/alerts">
-          View Alerts
-        </ActionButton>
+        <ActionButton href="/school-admin/alerts">View Alerts</ActionButton>
         <ActionButton href="/school-admin/wearables">
           Manage Wearables
         </ActionButton>
@@ -139,7 +133,7 @@ export default function StudentProfilePage() {
    UI Components
 ------------------------------ */
 
-function Section({ title, children }: any) {
+function Section({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
@@ -148,7 +142,7 @@ function Section({ title, children }: any) {
   );
 }
 
-function InfoCard({ title, children }: any) {
+function InfoCard({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <p className="text-sm text-muted-foreground mb-2">{title}</p>
@@ -157,7 +151,7 @@ function InfoCard({ title, children }: any) {
   );
 }
 
-function Metric({ label, value }: { label: string; value: any }) {
+function Metric({ label, value }) {
   return (
     <div className="rounded-lg border p-3 text-center">
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -166,13 +160,11 @@ function Metric({ label, value }: { label: string; value: any }) {
   );
 }
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ active }) {
   return (
     <span
       className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
-        active
-          ? "bg-green-100 text-green-700"
-          : "bg-gray-200 text-gray-700"
+        active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-700"
       }`}
     >
       {active ? "Active" : "Inactive"}
@@ -180,7 +172,7 @@ function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
-function WearableBadge({ connected }: { connected: boolean }) {
+function WearableBadge({ connected }) {
   return (
     <span
       className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
@@ -194,7 +186,7 @@ function WearableBadge({ connected }: { connected: boolean }) {
   );
 }
 
-function RiskBadge({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
+function RiskBadge({ level }) {
   const styles = {
     LOW: "bg-green-100 text-green-700",
     MEDIUM: "bg-yellow-100 text-yellow-800",
@@ -210,7 +202,7 @@ function RiskBadge({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
   );
 }
 
-function ActionButton({ href, children }: any) {
+function ActionButton({ href, children }) {
   return (
     <Link
       href={href}

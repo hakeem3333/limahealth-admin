@@ -9,8 +9,7 @@ import { api } from "@/lib/axios";
  * School Admin – Wearables Management
  */
 export default function WearablesPage() {
-  const [filter, setFilter] =
-    (useState < "all") | "connected" | ("not_connected" > "all");
+  const [filter, setFilter] = useState("all");
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["school-wearables", filter],
@@ -80,7 +79,7 @@ export default function WearablesPage() {
             </tr>
           </thead>
           <tbody>
-            {data.length === 0 ? (
+            {!data || data.length === 0 ? (
               <tr>
                 <td
                   colSpan={5}
@@ -90,7 +89,7 @@ export default function WearablesPage() {
                 </td>
               </tr>
             ) : (
-              data.map((row: any) => (
+              data.map((row) => (
                 <tr key={row.studentId} className="border-t">
                   <TableCell>
                     <Link
@@ -134,15 +133,7 @@ export default function WearablesPage() {
    UI Helpers
 ------------------------------ */
 
-function FilterButton({
-  children,
-  active,
-  onClick,
-}: {
-  children: any,
-  active: boolean,
-  onClick: () => void,
-}) {
+function FilterButton({ children, active, onClick }) {
   return (
     <button
       onClick={onClick}
@@ -155,7 +146,7 @@ function FilterButton({
   );
 }
 
-function TableHead({ children, className = "" }: any) {
+function TableHead({ children, className = "" }) {
   return (
     <th
       className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}
@@ -165,11 +156,11 @@ function TableHead({ children, className = "" }: any) {
   );
 }
 
-function TableCell({ children, className = "" }: any) {
+function TableCell({ children, className = "" }) {
   return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }
 
-function WearableBadge({ connected }: { connected: boolean }) {
+function WearableBadge({ connected }) {
   return (
     <span
       className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${

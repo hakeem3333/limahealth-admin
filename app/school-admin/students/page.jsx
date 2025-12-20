@@ -6,25 +6,29 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 
 /**
- * School Admin – Counselors Management
+ * School Admin – Students Management
  */
-export default function CounselorsPage() {
+export default function StudentsPage() {
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["counselors", search],
+    queryKey: ["students", search, status],
     queryFn: async () => {
-      const res = await api.get("/school/counselors", {
-        params: { search },
+      const res = await api.get("/school/students", {
+        params: {
+          search,
+          status: status === "all" ? undefined : status,
+        },
       });
       return res.data;
     },
   });
 
-  if (isLoading) return <CounselorsSkeleton />;
+  if (isLoading) return <StudentsSkeleton />;
 
   if (error) {
-    return <div className="text-red-600">Failed to load counselors.</div>;
+    return <div className="text-red-600">Failed to load students.</div>;
   }
 
   return (
@@ -32,72 +36,88 @@ export default function CounselorsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Counselors</h1>
+          <h1 className="text-2xl font-bold">Students</h1>
           <p className="text-muted-foreground">
-            Manage counselors and student assignments
+            Manage students and wearable connections
           </p>
         </div>
 
         <Link
-          href="/school-admin/counselors/new"
+          href="/school-admin/students/new"
           className="inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-white hover:bg-gray-800"
         >
-          + Add Counselor
+          + Add Student
         </Link>
       </div>
 
-      {/* Search */}
-      <div className="max-w-sm">
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
         <input
           type="text"
           placeholder="Search by name or email"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-md border px-3 py-2"
+          className="w-full md:w-64 rounded-md border px-3 py-2"
         />
+
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="w-full md:w-40 rounded-md border px-3 py-2"
+        >
+          <option value="all">All Students</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
 
-      {/* Counselors Table */}
+      {/* Students Table */}
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Assigned Students</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Wearable</TableHead>
+              <TableHead>Risk Level</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </tr>
           </thead>
           <tbody>
-            {data.length === 0 ? (
+            {!data || data.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="p-6 text-center text-muted-foreground"
                 >
-                  No counselors found.
+                  No students found.
                 </td>
               </tr>
             ) : (
-              data.map((counselor: any) => (
-                <tr key={counselor.id} className="border-t">
+              data.map((student) => (
+                <tr key={student.id} className="border-t">
                   <TableCell>
                     <Link
-                      href={`/school-admin/counselors/${counselor.id}`}
+                      href={`/school-admin/students/${student.id}`}
                       className="font-medium hover:underline"
                     >
-                      {counselor.name}
+                      {student.name}
                     </Link>
                   </TableCell>
-                  <TableCell>{counselor.email}</TableCell>
-                  <TableCell>{counselor.studentsCount}</TableCell>
+                  <TableCell>{student.email}</TableCell>
                   <TableCell>
-                    <StatusBadge active={counselor.isActive} />
+                    <StatusBadge active={student.isActive} />
+                  </TableCell>
+                  <TableCell>
+                    <WearableBadge connected={student.wearableConnected} />
+                  </TableCell>
+                  <TableCell>
+                    <RiskBadge level={student.riskLevel} />
                   </TableCell>
                   <TableCell className="text-right">
                     <Link
-                      href={`/school-admin/counselors/${counselor.id}`}
+                      href={`/school-admin/students/${student.id}`}
                       className="text-blue-600 hover:underline"
                     >
                       View
@@ -117,7 +137,7 @@ export default function CounselorsPage() {
    UI Helpers
 ------------------------------ */
 
-function TableHead({ children, className = "" }: any) {
+function TableHead({ children, className = "" }) {
   return (
     <th
       className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}
@@ -127,11 +147,11 @@ function TableHead({ children, className = "" }: any) {
   );
 }
 
-function TableCell({ children, className = "" }: any) {
+function TableCell({ children, className = "" }) {
   return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ active }) {
   return (
     <span
       className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
@@ -143,11 +163,41 @@ function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
-function CounselorsSkeleton() {
+function WearableBadge({ connected }) {
+  return (
+    <span
+      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+        connected
+          ? "bg-blue-100 text-blue-700"
+          : "bg-yellow-100 text-yellow-800"
+      }`}
+    >
+      {connected ? "Connected" : "Not linked"}
+    </span>
+  );
+}
+
+function RiskBadge({ level }) {
+  const styles = {
+    LOW: "bg-green-100 text-green-700",
+    MEDIUM: "bg-yellow-100 text-yellow-800",
+    HIGH: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${styles[level]}`}
+    >
+      {level}
+    </span>
+  );
+}
+
+function StudentsSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
       <div className="h-8 w-40 bg-gray-200 rounded" />
-      <div className="h-10 w-64 bg-gray-200 rounded" />
+      <div className="h-10 w-full bg-gray-200 rounded" />
       <div className="h-64 w-full bg-gray-200 rounded-xl" />
     </div>
   );

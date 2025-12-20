@@ -8,7 +8,7 @@ import { api } from "@/lib/axios";
  * School Admin – Reports & Analytics
  */
 export default function ReportsPage() {
-  const [range, setRange] = (useState < "7d") | "30d" | ("90d" > "30d");
+  const [range, setRange] = useState("7d"); // default to 7 days
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["school-reports", range],
@@ -44,11 +44,8 @@ export default function ReportsPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard title="Students Monitored">{data.studentsCount}</StatCard>
-
         <StatCard title="High-Risk Students">{data.highRiskCount}</StatCard>
-
         <StatCard title="Alerts Generated">{data.alertsCount}</StatCard>
-
         <StatCard title="Interventions">{data.interventionsCount}</StatCard>
       </div>
 
@@ -84,7 +81,7 @@ export default function ReportsPage() {
                   </td>
                 </tr>
               ) : (
-                data.counselorActivity.map((c: any) => (
+                data.counselorActivity.map((c) => (
                   <tr key={c.id} className="border-t">
                     <TableCell>{c.name}</TableCell>
                     <TableCell>{c.students}</TableCell>
@@ -108,15 +105,9 @@ export default function ReportsPage() {
 
 /* -----------------------------
    UI Components
------------------------------- */
+----------------------------- */
 
-function RangeSelector({
-  value,
-  onChange,
-}: {
-  value: "7d" | "30d" | "90d",
-  onChange: (v: any) => void,
-}) {
+function RangeSelector({ value, onChange }) {
   return (
     <select
       value={value}
@@ -130,7 +121,7 @@ function RangeSelector({
   );
 }
 
-function Section({ title, children }: any) {
+function Section({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
@@ -139,7 +130,7 @@ function Section({ title, children }: any) {
   );
 }
 
-function StatCard({ title, children }: any) {
+function StatCard({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <p className="text-sm text-muted-foreground mb-2">{title}</p>
@@ -148,13 +139,7 @@ function StatCard({ title, children }: any) {
   );
 }
 
-function RiskCard({
-  level,
-  value,
-}: {
-  level: "LOW" | "MEDIUM" | "HIGH",
-  value: number,
-}) {
+function RiskCard({ level, value }) {
   const styles = {
     LOW: "bg-green-100 text-green-700",
     MEDIUM: "bg-yellow-100 text-yellow-800",
@@ -168,7 +153,7 @@ function RiskCard({
   );
 }
 
-function TableHead({ children }: any) {
+function TableHead({ children }) {
   return (
     <th className="px-4 py-3 text-left font-medium text-muted-foreground">
       {children}
@@ -176,7 +161,7 @@ function TableHead({ children }: any) {
   );
 }
 
-function TableCell({ children }: any) {
+function TableCell({ children }) {
   return <td className="px-4 py-3">{children}</td>;
 }
 

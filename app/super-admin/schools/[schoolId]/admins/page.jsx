@@ -5,49 +5,33 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { useState } from "react";
 
-interface Admin {
-  id: string;
-  name: string;
-  email: string;
-}
-
 export default function SchoolAdminsPage() {
-  const { schoolId } = useParams<{ schoolId: string }>();
+  const { schoolId } = useParams();
   const queryClient = useQueryClient();
   const [adminId, setAdminId] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["school-admins", schoolId],
     queryFn: async () => {
-      const res = await api.get(
-        `/super-admin/schools/${schoolId}/admins`
-      );
+      const res = await api.get(`/super-admin/schools/${schoolId}/admins`);
       return res.data;
     },
   });
 
   const assignAdmin = useMutation({
     mutationFn: () =>
-      api.post(`/super-admin/schools/${schoolId}/admins`, {
-        adminId,
-      }),
+      api.post(`/super-admin/schools/${schoolId}/admins`, { adminId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["school-admins", schoolId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["school-admins", schoolId] });
       setAdminId("");
     },
   });
 
   const removeAdmin = useMutation({
-    mutationFn: (adminId: string) =>
-      api.delete(
-        `/super-admin/schools/${schoolId}/admins/${adminId}`
-      ),
+    mutationFn: (id) =>
+      api.delete(`/super-admin/schools/${schoolId}/admins/${id}`),
     onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ["school-admins", schoolId],
-      }),
+      queryClient.invalidateQueries({ queryKey: ["school-admins", schoolId] }),
   });
 
   if (isLoading) return <p>Loading admins...</p>;
@@ -56,7 +40,7 @@ export default function SchoolAdminsPage() {
     <div className="space-y-6 max-w-2xl">
       <h1 className="text-2xl font-bold">School Admins</h1>
 
-      {/* Assign */}
+      {/* Assign Admin */}
       <div className="flex gap-2">
         <input
           placeholder="Admin ID"
@@ -72,18 +56,16 @@ export default function SchoolAdminsPage() {
         </button>
       </div>
 
-      {/* List */}
+      {/* List of Admins */}
       <div className="border rounded-xl">
-        {data.map((admin: Admin) => (
+        {data.map((admin) => (
           <div
             key={admin.id}
             className="flex items-center justify-between p-3 border-b last:border-none"
           >
             <div>
               <p className="font-medium">{admin.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {admin.email}
-              </p>
+              <p className="text-xs text-muted-foreground">{admin.email}</p>
             </div>
             <button
               onClick={() => removeAdmin.mutate(admin.id)}

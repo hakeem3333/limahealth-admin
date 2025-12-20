@@ -5,17 +5,15 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 
-/**
- * School Admin – Alerts & Interventions
- */
 export default function AlertsPage() {
-  const [severity, setSeverity] =
-    (useState < "ALL") | "LOW" | "MEDIUM" | ("HIGH" > "ALL");
+  const [severity, setSeverity] = useState("ALL");
+  const [status, setStatus] = useState("ALL");
 
-  const [status, setStatus] =
-    (useState < "ALL") | "OPEN" | "ACKNOWLEDGED" | ("RESOLVED" > "ALL");
-
-  const { data, isLoading, error } = useQuery({
+  const {
+    data = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["school-alerts", severity, status],
     queryFn: async () => {
       const res = await api.get("/school/alerts", {
@@ -30,13 +28,10 @@ export default function AlertsPage() {
 
   if (isLoading) return <AlertsSkeleton />;
 
-  if (error) {
-    return <div className="text-red-600">Failed to load alerts.</div>;
-  }
+  if (error) return <div className="text-red-600">Failed to load alerts.</div>;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Alerts</h1>
         <p className="text-muted-foreground">
@@ -44,7 +39,6 @@ export default function AlertsPage() {
         </p>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <FilterSelect
           label="Severity"
@@ -52,6 +46,7 @@ export default function AlertsPage() {
           onChange={setSeverity}
           options={["ALL", "LOW", "MEDIUM", "HIGH"]}
         />
+
         <FilterSelect
           label="Status"
           value={status}
@@ -60,7 +55,6 @@ export default function AlertsPage() {
         />
       </div>
 
-      {/* Alerts Table */}
       <div className="overflow-x-auto rounded-xl border">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800">
@@ -74,6 +68,7 @@ export default function AlertsPage() {
               <TableHead className="text-right">Action</TableHead>
             </tr>
           </thead>
+
           <tbody>
             {data.length === 0 ? (
               <tr>
@@ -85,7 +80,7 @@ export default function AlertsPage() {
                 </td>
               </tr>
             ) : (
-              data.map((alert: any) => (
+              data.map((alert) => (
                 <tr key={alert.id} className="border-t">
                   <TableCell>
                     <Link
@@ -102,7 +97,7 @@ export default function AlertsPage() {
 
                   <TableCell>{alert.trigger}</TableCell>
 
-                  <TableCell>{alert.counselorName ?? "Unassigned"}</TableCell>
+                  <TableCell>{alert.counselorName || "Unassigned"}</TableCell>
 
                   <TableCell>
                     <StatusBadge status={alert.status} />
@@ -132,23 +127,11 @@ export default function AlertsPage() {
   );
 }
 
-/* -----------------------------
-   UI Components
------------------------------- */
+/* ---------------- UI Components ---------------- */
 
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string,
-  value: string,
-  onChange: (v: any) => void,
-  options: string[],
-}) {
+function FilterSelect({ label, value, onChange, options }) {
   return (
-    <label className="flex flex-col text-sm gap-1">
+    <label className="flex flex-col gap-1 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <select
         value={value}
@@ -165,7 +148,7 @@ function FilterSelect({
   );
 }
 
-function TableHead({ children, className = "" }: any) {
+function TableHead({ children, className = "" }) {
   return (
     <th
       className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}
@@ -175,11 +158,11 @@ function TableHead({ children, className = "" }: any) {
   );
 }
 
-function TableCell({ children, className = "" }: any) {
+function TableCell({ children, className = "" }) {
   return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }
 
-function SeverityBadge({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
+function SeverityBadge({ level }) {
   const styles = {
     LOW: "bg-green-100 text-green-700",
     MEDIUM: "bg-yellow-100 text-yellow-800",
@@ -195,11 +178,7 @@ function SeverityBadge({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
   );
 }
 
-function StatusBadge({
-  status,
-}: {
-  status: "OPEN" | "ACKNOWLEDGED" | "RESOLVED",
-}) {
+function StatusBadge({ status }) {
   const styles = {
     OPEN: "bg-red-100 text-red-700",
     ACKNOWLEDGED: "bg-yellow-100 text-yellow-800",
@@ -215,13 +194,7 @@ function StatusBadge({
   );
 }
 
-function ActionButton({
-  children,
-  variant = "default",
-}: {
-  children: any,
-  variant?: "default" | "danger",
-}) {
+function ActionButton({ children, variant = "default" }) {
   return (
     <button
       className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
@@ -238,9 +211,9 @@ function ActionButton({
 function AlertsSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      <div className="h-8 w-40 bg-gray-200 rounded" />
-      <div className="h-12 w-72 bg-gray-200 rounded" />
-      <div className="h-72 w-full bg-gray-200 rounded-xl" />
+      <div className="h-8 w-40 rounded bg-gray-200" />
+      <div className="h-12 w-72 rounded bg-gray-200" />
+      <div className="h-72 w-full rounded-xl bg-gray-200" />
     </div>
   );
 }

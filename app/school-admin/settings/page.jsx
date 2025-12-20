@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 
@@ -16,10 +16,17 @@ export default function SchoolSettingsPage() {
     },
   });
 
-  const [form, setForm] = useState<any>(data ?? {});
+  const [form, setForm] = useState({}); // initialize empty
+
+  // Update form when data loads
+  useEffect(() => {
+    if (data) {
+      setForm(data);
+    }
+  }, [data]);
 
   const mutation = useMutation({
-    mutationFn: async (values: any) => {
+    mutationFn: async (values) => {
       const res = await api.put("/school/settings", values);
       return res.data;
     },
@@ -30,11 +37,11 @@ export default function SchoolSettingsPage() {
 
   if (isLoading) return <p>Loading settings...</p>;
 
-  const handleChange = (field: string, value: any) => {
-    setForm((prev: any) => ({ ...prev, [field]: value }));
+  const handleChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     mutation.mutate(form);
   };
@@ -116,9 +123,9 @@ export default function SchoolSettingsPage() {
 
 /* -----------------------------
    UI Components
------------------------------- */
+----------------------------- */
 
-function Section({ title, children }: any) {
+function Section({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4 space-y-4">
       <h2 className="text-lg font-semibold">{title}</h2>
@@ -127,7 +134,7 @@ function Section({ title, children }: any) {
   );
 }
 
-function InputField({ label, value, onChange, type = "text" }: any) {
+function InputField({ label, value, onChange, type = "text" }) {
   return (
     <label className="flex flex-col text-sm gap-1">
       <span className="text-muted-foreground">{label}</span>
@@ -141,7 +148,7 @@ function InputField({ label, value, onChange, type = "text" }: any) {
   );
 }
 
-function CheckboxField({ label, checked, onChange }: any) {
+function CheckboxField({ label, checked, onChange }) {
   return (
     <label className="inline-flex items-center gap-2 text-sm">
       <input

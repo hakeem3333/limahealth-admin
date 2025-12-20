@@ -5,18 +5,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/axios";
 
-interface School {
-  id: string;
-  name: string;
-  email: string;
-  status: "ACTIVE" | "SUSPENDED";
-}
-
 export default function SchoolDetailPage() {
-  const { schoolId } = useParams<{ schoolId: string }>();
+  const { schoolId } = useParams();
   const queryClient = useQueryClient();
+  const [form, setForm] = useState(null);
 
-  const { data, isLoading } = useQuery<School>({
+  const { data, isLoading } = useQuery({
     queryKey: ["school", schoolId],
     queryFn: async () => {
       const res = await api.get(`/super-admin/schools/${schoolId}`);
@@ -24,15 +18,12 @@ export default function SchoolDetailPage() {
     },
   });
 
-  const [form, setForm] = useState<School | null>(null);
-
   useEffect(() => {
     if (data) setForm(data);
   }, [data]);
 
   const updateSchool = useMutation({
-    mutationFn: (values: Partial<School>) =>
-      api.put(`/super-admin/schools/${schoolId}`, values),
+    mutationFn: (values) => api.put(`/super-admin/schools/${schoolId}`, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["school", schoolId] });
       alert("School updated");
@@ -68,9 +59,7 @@ export default function SchoolDetailPage() {
           <span className="font-medium">Status</span>
           <select
             value={form.status}
-            onChange={(e) =>
-              setForm({ ...form, status: e.target.value as any })
-            }
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
             className="border rounded-md px-2 py-1"
           >
             <option value="ACTIVE">Active</option>
@@ -86,15 +75,7 @@ export default function SchoolDetailPage() {
   );
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function Field({ label, value, onChange }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span className="font-medium">{label}</span>

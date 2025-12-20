@@ -15,18 +15,18 @@ export default function AdminProfilePage() {
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: any) => {
+    mutationFn: async (values) => {
       const res = await api.put("/admin/change-password", values);
       return res.data;
     },
     onSuccess: () => alert("Password updated successfully!"),
   });
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field, value) => {
     setPasswordForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       alert("Passwords do not match");
@@ -94,9 +94,9 @@ export default function AdminProfilePage() {
 
 /* -----------------------------
    UI Components
------------------------------- */
+----------------------------- */
 
-function Section({ title, children }: any) {
+function Section({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4 space-y-4">
       <h2 className="text-lg font-semibold">{title}</h2>
@@ -105,7 +105,7 @@ function Section({ title, children }: any) {
   );
 }
 
-function InputField({ label, value, onChange, type = "text" }: any) {
+function InputField({ label, value, onChange, type = "text" }) {
   return (
     <label className="flex flex-col text-sm gap-1">
       <span className="text-muted-foreground">{label}</span>
@@ -119,7 +119,7 @@ function InputField({ label, value, onChange, type = "text" }: any) {
   );
 }
 
-function CheckboxField({ label, checked, onChange }: any) {
+function CheckboxField({ label, checked, onChange }) {
   return (
     <label className="inline-flex items-center gap-2 text-sm">
       <input

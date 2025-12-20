@@ -9,7 +9,11 @@ import Link from "next/link";
  * Shows high-level overview of a single school
  */
 export default function SchoolAdminDashboard() {
-  const { data, isLoading, error } = useQuery({
+  const {
+    data = {},
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["school-dashboard"],
     queryFn: async () => {
       const res = await api.get("/school/dashboard");
@@ -39,22 +43,22 @@ export default function SchoolAdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
           title="Students"
-          value={data.studentsCount}
+          value={data.studentsCount || 0}
           link="/school-admin/students"
         />
         <StatCard
           title="Counselors"
-          value={data.counselorsCount}
+          value={data.counselorsCount || 0}
           link="/school-admin/counselors"
         />
         <StatCard
           title="Active Wearables"
-          value={data.activeWearables}
+          value={data.activeWearables || 0}
           link="/school-admin/wearables"
         />
         <StatCard
           title="High-Risk Alerts"
-          value={data.highRiskAlerts}
+          value={data.highRiskAlerts || 0}
           link="/school-admin/alerts"
           danger
         />
@@ -64,11 +68,11 @@ export default function SchoolAdminDashboard() {
       <div className="bg-white dark:bg-gray-900 rounded-xl border p-4">
         <h2 className="text-lg font-semibold mb-3">Recent Alerts</h2>
 
-        {data.recentAlerts.length === 0 ? (
+        {!data.recentAlerts || data.recentAlerts.length === 0 ? (
           <p className="text-muted-foreground">No recent alerts 🎉</p>
         ) : (
           <ul className="space-y-2">
-            {data.recentAlerts.map((alert: any) => (
+            {data.recentAlerts.map((alert) => (
               <li
                 key={alert.id}
                 className="flex items-center justify-between p-3 border rounded-lg"
@@ -104,19 +108,9 @@ export default function SchoolAdminDashboard() {
 
 /* -----------------------------
    Components
------------------------------- */
+----------------------------- */
 
-function StatCard({
-  title,
-  value,
-  link,
-  danger = false,
-}: {
-  title: string,
-  value: number,
-  link: string,
-  danger?: boolean,
-}) {
+function StatCard({ title, value, link, danger = false }) {
   return (
     <Link
       href={link}
@@ -132,7 +126,7 @@ function StatCard({
   );
 }
 
-function QuickAction({ title, href }: { title: string, href: string }) {
+function QuickAction({ title, href }) {
   return (
     <Link
       href={href}
