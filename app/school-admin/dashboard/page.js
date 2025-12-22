@@ -1,27 +1,49 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
-import Link from "next/link";
 
-/**
- * School Admin Dashboard
- * Shows high-level overview of a single school
- */
+/* -----------------------------
+   Types
+------------------------------ */
+
+type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
+
+interface DashboardAlert {
+  id: string;
+  studentName: string;
+  riskLevel: RiskLevel;
+}
+
+interface SchoolDashboard {
+  studentsCount: number;
+  counselorsCount: number;
+  activeWearables: number;
+  highRiskAlerts: number;
+  recentAlerts: DashboardAlert[];
+}
+
+/* -----------------------------
+   Page
+------------------------------ */
+
 export default function SchoolAdminDashboard() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["school-dashboard"],
-    queryFn: async () => {
-      const res = await api.get("/school/dashboard");
-      return res.data;
-    },
-  });
+  const { data, isLoading, error } =
+    useQuery <
+    SchoolDashboard >
+    {
+      queryKey: ["school-dashboard"],
+      staleTime: 60_000,
+      queryFn: async () => {
+        const res = await api.get("/school/dashboard");
+        return res.data;
+      },
+    };
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
+  if (isLoading) return <DashboardSkeleton />;
 
-  if (error) {
+  if (error || !data) {
     return <div className="text-red-600">Failed to load dashboard data.</div>;
   }
 
@@ -35,49 +57,49 @@ export default function SchoolAdminDashboard() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Stats */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <StatCard
           title="Students"
           value={data.studentsCount}
-          link="/school-admin/students"
+          href="/school-admin/students"
         />
         <StatCard
           title="Counselors"
           value={data.counselorsCount}
-          link="/school-admin/counselors"
+          href="/school-admin/counselors"
         />
         <StatCard
           title="Active Wearables"
           value={data.activeWearables}
-          link="/school-admin/wearables"
+          href="/school-admin/wearables"
         />
         <StatCard
           title="High-Risk Alerts"
           value={data.highRiskAlerts}
-          link="/school-admin/alerts"
-          danger
+          href="/school-admin/alerts"
+          variant="danger"
         />
       </div>
 
-      {/* Alerts */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border p-4">
-        <h2 className="text-lg font-semibold mb-3">Recent Alerts</h2>
+      {/* Recent Alerts */}
+      <section className="rounded-xl border bg-white p-4 dark:bg-gray-900">
+        <h2 className="mb-3 text-lg font-semibold">Recent Alerts</h2>
 
         {data.recentAlerts.length === 0 ? (
           <p className="text-muted-foreground">No recent alerts 🎉</p>
         ) : (
           <ul className="space-y-2">
-            {data.recentAlerts.map((alert: any) => (
+            {data.recentAlerts.map((alert) => (
               <li
                 key={alert.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
+                className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div>
                   <p className="font-medium">{alert.studentName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Risk Level: {alert.riskLevel}
-                  </p>
+                  <div className="mt-1">
+                    <RiskBadge level={alert.riskLevel} />
+                  </div>
                 </div>
 
                 <Link
@@ -90,12 +112,15 @@ export default function SchoolAdminDashboard() {
             ))}
           </ul>
         )}
-      </div>
+      </section>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <QuickAction title="Add Student" href="/school-admin/students" />
-        <QuickAction title="Add Counselor" href="/school-admin/counselors" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <QuickAction title="Add Student" href="/school-admin/students/new" />
+        <QuickAction
+          title="Add Counselor"
+          href="/school-admin/counselors/new"
+        />
         <QuickAction title="View Reports" href="/school-admin/reports" />
       </div>
     </div>
@@ -103,29 +128,33 @@ export default function SchoolAdminDashboard() {
 }
 
 /* -----------------------------
-   Components
+   UI Components
 ------------------------------ */
 
 function StatCard({
   title,
   value,
-  link,
-  danger = false,
+  href,
+  variant = "default",
 }: {
   title: string,
   value: number,
-  link: string,
-  danger?: boolean,
+  href: string,
+  variant?: "default" | "danger",
 }) {
   return (
     <Link
-      href={link}
-      className={`rounded-xl border p-4 hover:shadow transition ${
-        danger ? "border-red-500" : ""
+      href={href}
+      className={`rounded-xl border p-4 transition hover:shadow ${
+        variant === "danger" ? "border-red-500" : ""
       }`}
     >
       <p className="text-sm text-muted-foreground">{title}</p>
-      <p className={`text-3xl font-bold ${danger ? "text-red-600" : ""}`}>
+      <p
+        className={`text-3xl font-bold ${
+          variant === "danger" ? "text-red-600" : ""
+        }`}
+      >
         {value}
       </p>
     </Link>
@@ -136,25 +165,41 @@ function QuickAction({ title, href }: { title: string, href: string }) {
   return (
     <Link
       href={href}
-      className="rounded-xl border p-4 text-center font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+      className="rounded-xl border p-4 text-center font-medium transition hover:bg-gray-50 dark:hover:bg-gray-800"
     >
       {title}
     </Link>
   );
 }
 
+function RiskBadge({ level }: { level: RiskLevel }) {
+  const styles: Record<RiskLevel, string> = {
+    LOW: "bg-green-100 text-green-700",
+    MEDIUM: "bg-yellow-100 text-yellow-800",
+    HIGH: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${styles[level]}`}
+    >
+      {level}
+    </span>
+  );
+}
+
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className="h-8 w-48 bg-gray-200 rounded" />
+      <div className="h-8 w-48 rounded bg-gray-200" />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 bg-gray-200 rounded-xl" />
+          <div key={i} className="h-24 rounded-xl bg-gray-200" />
         ))}
       </div>
 
-      <div className="h-40 bg-gray-200 rounded-xl" />
+      <div className="h-40 rounded-xl bg-gray-200" />
     </div>
   );
 }
