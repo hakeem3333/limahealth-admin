@@ -1,30 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 
 /* -----------------------------
-   Types
------------------------------- */
-
-interface CounselorListItem {
-  id: string;
-  name: string;
-  email: string;
-  studentsCount: number;
-  isActive: boolean;
-}
-
-/* -----------------------------
    Hooks
 ------------------------------ */
 
-function useDebouncedValue<T>(value: T, delay = 300) {
+function useDebouncedValue(value, delay = 300) {
   const [debounced, setDebounced] = useState(value);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const id = setTimeout(() => setDebounced(value), delay);
     return () => clearTimeout(id);
   }, [value, delay]);
@@ -44,11 +32,9 @@ export default function CounselorsPage() {
     data = [],
     isLoading,
     error,
-  } = useQuery<CounselorListItem[]>({
+  } = useQuery({
     queryKey: ["counselors", debouncedSearch],
-    enabled:
-      debouncedSearch.length === 0 ||
-      debouncedSearch.length >= 2,
+    enabled: debouncedSearch.length === 0 || debouncedSearch.length >= 2,
     queryFn: async () => {
       const res = await api.get("/school/counselors", {
         params: {
@@ -62,11 +48,7 @@ export default function CounselorsPage() {
   if (isLoading) return <CounselorsSkeleton />;
 
   if (error) {
-    return (
-      <div className="text-red-600">
-        Failed to load counselors.
-      </div>
-    );
+    return <div className="text-red-600">Failed to load counselors.</div>;
   }
 
   return (
@@ -105,15 +87,14 @@ export default function CounselorsPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <TableHead scope="col">Name</TableHead>
-              <TableHead scope="col">Email</TableHead>
-              <TableHead scope="col">Assigned Students</TableHead>
-              <TableHead scope="col">Status</TableHead>
-              <TableHead scope="col" className="text-right">
-                Action
-              </TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Assigned Students</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Action</TableHead>
             </tr>
           </thead>
+
           <tbody>
             {data.length === 0 ? (
               <tr>
@@ -128,10 +109,7 @@ export default function CounselorsPage() {
               </tr>
             ) : (
               data.map((counselor) => (
-                <tr
-                  key={counselor.id}
-                  className="border-t"
-                >
+                <tr key={counselor.id} className="border-t">
                   <TableCell>
                     <Link
                       href={`/school-admin/counselors/${counselor.id}`}
@@ -143,9 +121,7 @@ export default function CounselorsPage() {
 
                   <TableCell>{counselor.email}</TableCell>
 
-                  <TableCell>
-                    {counselor.studentsCount}
-                  </TableCell>
+                  <TableCell>{counselor.studentsCount}</TableCell>
 
                   <TableCell>
                     <StatusBadge active={counselor.isActive} />
@@ -173,18 +149,10 @@ export default function CounselorsPage() {
    UI Components
 ------------------------------ */
 
-function TableHead({
-  children,
-  className = "",
-  scope = "col",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  scope?: "col" | "row";
-}) {
+function TableHead({ children, className = "" }) {
   return (
     <th
-      scope={scope}
+      scope="col"
       className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}
     >
       {children}
@@ -192,27 +160,15 @@ function TableHead({
   );
 }
 
-function TableCell({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <td className={`px-4 py-3 ${className}`}>
-      {children}
-    </td>
-  );
+function TableCell({ children, className = "" }) {
+  return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ active }) {
   return (
     <span
       className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-        active
-          ? "bg-green-100 text-green-700"
-          : "bg-gray-200 text-gray-700"
+        active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-700"
       }`}
     >
       {active ? "Active" : "Inactive"}

@@ -6,36 +6,18 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 
 /* -----------------------------
-   Types
------------------------------- */
-
-type Severity = "ALL" | "LOW" | "MEDIUM" | "HIGH";
-type Status = "ALL" | "OPEN" | "ACKNOWLEDGED" | "RESOLVED";
-
-interface Alert {
-  id: string;
-  studentId: string;
-  studentName: string;
-  severity: "LOW" | "MEDIUM" | "HIGH";
-  trigger: string;
-  counselorName?: string | null;
-  status: "OPEN" | "ACKNOWLEDGED" | "RESOLVED";
-  createdAt: string;
-}
-
-/* -----------------------------
    Page
 ------------------------------ */
 
 export default function AlertsPage() {
-  const [severity, setSeverity] = useState<Severity>("ALL");
-  const [status, setStatus] = useState<Status>("ALL");
+  const [severity, setSeverity] = useState("ALL");
+  const [status, setStatus] = useState("ALL");
 
   const {
     data = [],
     isLoading,
     error,
-  } = useQuery<Alert[]>({
+  } = useQuery({
     queryKey: ["school-alerts", severity, status],
     queryFn: async () => {
       const res = await api.get("/school/alerts", {
@@ -85,15 +67,13 @@ export default function AlertsPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              <TableHead scope="col">Student</TableHead>
-              <TableHead scope="col">Severity</TableHead>
-              <TableHead scope="col">Trigger</TableHead>
-              <TableHead scope="col">Counselor</TableHead>
-              <TableHead scope="col">Status</TableHead>
-              <TableHead scope="col">Created</TableHead>
-              <TableHead scope="col" className="text-right">
-                Action
-              </TableHead>
+              <TableHead>Student</TableHead>
+              <TableHead>Severity</TableHead>
+              <TableHead>Trigger</TableHead>
+              <TableHead>Counselor</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">Action</TableHead>
             </tr>
           </thead>
 
@@ -125,9 +105,7 @@ export default function AlertsPage() {
 
                   <TableCell>{alert.trigger}</TableCell>
 
-                  <TableCell>
-                    {alert.counselorName ?? "Unassigned"}
-                  </TableCell>
+                  <TableCell>{alert.counselorName || "Unassigned"}</TableCell>
 
                   <TableCell>
                     <StatusBadge status={alert.status} />
@@ -144,9 +122,7 @@ export default function AlertsPage() {
                     <div className="flex justify-end gap-2">
                       {alert.status === "OPEN" && (
                         <ActionButton
-                          onClick={() =>
-                            console.log("Acknowledge", alert.id)
-                          }
+                          onClick={() => console.log("Acknowledge", alert.id)}
                         >
                           Acknowledge
                         </ActionButton>
@@ -154,9 +130,7 @@ export default function AlertsPage() {
                       {alert.status !== "RESOLVED" && (
                         <ActionButton
                           variant="danger"
-                          onClick={() =>
-                            console.log("Resolve", alert.id)
-                          }
+                          onClick={() => console.log("Resolve", alert.id)}
                         >
                           Resolve
                         </ActionButton>
@@ -177,23 +151,13 @@ export default function AlertsPage() {
    UI Components
 ------------------------------ */
 
-function FilterSelect<T extends string>({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: T;
-  onChange: (v: T) => void;
-  options: readonly T[];
-}) {
+function FilterSelect({ label, value, onChange, options }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span className="text-muted-foreground">{label}</span>
       <select
         value={value}
-        onChange={(e) => onChange(e.target.value as T)}
+        onChange={(e) => onChange(e.target.value)}
         className="rounded-md border px-3 py-2 text-sm"
       >
         {options.map((opt) => (
@@ -206,18 +170,10 @@ function FilterSelect<T extends string>({
   );
 }
 
-function TableHead({
-  children,
-  className = "",
-  scope = "col",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  scope?: "col" | "row";
-}) {
+function TableHead({ children, className = "" }) {
   return (
     <th
-      scope={scope}
+      scope="col"
       className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}
     >
       {children}
@@ -225,17 +181,11 @@ function TableHead({
   );
 }
 
-function TableCell({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+function TableCell({ children, className = "" }) {
   return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }
 
-function SeverityBadge({ level }: { level: Alert["severity"] }) {
+function SeverityBadge({ level }) {
   const styles = {
     LOW: "bg-green-100 text-green-700",
     MEDIUM: "bg-yellow-100 text-yellow-800",
@@ -251,7 +201,7 @@ function SeverityBadge({ level }: { level: Alert["severity"] }) {
   );
 }
 
-function StatusBadge({ status }: { status: Alert["status"] }) {
+function StatusBadge({ status }) {
   const styles = {
     OPEN: "bg-red-100 text-red-700",
     ACKNOWLEDGED: "bg-yellow-100 text-yellow-800",
@@ -267,15 +217,7 @@ function StatusBadge({ status }: { status: Alert["status"] }) {
   );
 }
 
-function ActionButton({
-  children,
-  onClick,
-  variant = "default",
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  variant?: "default" | "danger";
-}) {
+function ActionButton({ children, onClick, variant = "default" }) {
   return (
     <button
       onClick={onClick}

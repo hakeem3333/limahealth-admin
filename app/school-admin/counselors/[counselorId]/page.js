@@ -1,59 +1,23 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
-
-/* -----------------------------
-   Types
------------------------------- */
-
-type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
-
-interface Student {
-  id: string;
-  name: string;
-  riskLevel: RiskLevel;
-  wearableConnected: boolean;
-}
-
-interface Intervention {
-  id: string;
-  studentName: string;
-  note: string;
-  createdAt: string;
-}
-
-interface CounselorProfile {
-  id: string;
-  name: string;
-  email: string;
-  isActive: boolean;
-  activeAlerts: number;
-  lastActivity: string | null;
-  students: Student[];
-  interventions: Intervention[];
-}
 
 /* -----------------------------
    Page
 ------------------------------ */
 
 export default function CounselorProfilePage() {
-  const { counselorId } = useParams<{ counselorId: string }>();
+  const params = useParams();
+  const counselorId = params?.counselorId;
 
-  const {
-    data,
-    isLoading,
-    error,
-  } = useQuery<CounselorProfile>({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["counselor-profile", counselorId],
     enabled: !!counselorId,
     queryFn: async () => {
-      const res = await api.get(
-        `/school/counselors/${counselorId}`
-      );
+      const res = await api.get(`/school/counselors/${counselorId}`);
       return res.data;
     },
   });
@@ -62,9 +26,7 @@ export default function CounselorProfilePage() {
 
   if (error || !data) {
     return (
-      <div className="text-red-600">
-        Failed to load counselor profile.
-      </div>
+      <div className="text-red-600">Failed to load counselor profile.</div>
     );
   }
 
@@ -72,10 +34,7 @@ export default function CounselorProfilePage() {
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="text-sm text-muted-foreground">
-        <Link
-          href="/school-admin/counselors"
-          className="hover:underline"
-        >
+        <Link href="/school-admin/counselors" className="hover:underline">
           Counselors
         </Link>{" "}
         / {data.name}
@@ -94,15 +53,11 @@ export default function CounselorProfilePage() {
       {/* Overview */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <InfoCard title="Assigned Students">
-          <p className="text-2xl font-bold">
-            {data.students.length}
-          </p>
+          <p className="text-2xl font-bold">{data.students.length}</p>
         </InfoCard>
 
         <InfoCard title="Active Alerts">
-          <p className="text-2xl font-bold">
-            {data.activeAlerts}
-          </p>
+          <p className="text-2xl font-bold">{data.activeAlerts}</p>
         </InfoCard>
 
         <InfoCard title="Last Activity">
@@ -117,20 +72,16 @@ export default function CounselorProfilePage() {
       {/* Assigned Students */}
       <Section title="Assigned Students">
         {data.students.length === 0 ? (
-          <p className="text-muted-foreground">
-            No students assigned.
-          </p>
+          <p className="text-muted-foreground">No students assigned.</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <TableHead scope="col">Name</TableHead>
-                  <TableHead scope="col">Risk Level</TableHead>
-                  <TableHead scope="col">Wearable</TableHead>
-                  <TableHead scope="col" className="text-right">
-                    Profile
-                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Risk Level</TableHead>
+                  <TableHead>Wearable</TableHead>
+                  <TableHead className="text-right">Profile</TableHead>
                 </tr>
               </thead>
               <tbody>
@@ -141,9 +92,7 @@ export default function CounselorProfilePage() {
                       <RiskBadge level={student.riskLevel} />
                     </TableCell>
                     <TableCell>
-                      {student.wearableConnected
-                        ? "Connected"
-                        : "Not linked"}
+                      {student.wearableConnected ? "Connected" : "Not linked"}
                     </TableCell>
                     <TableCell className="text-right">
                       <Link
@@ -164,9 +113,7 @@ export default function CounselorProfilePage() {
       {/* Recent Interventions */}
       <Section title="Recent Interventions">
         {data.interventions.length === 0 ? (
-          <p className="text-muted-foreground">
-            No interventions recorded.
-          </p>
+          <p className="text-muted-foreground">No interventions recorded.</p>
         ) : (
           <ul className="space-y-2">
             {data.interventions.map((i) => (
@@ -175,12 +122,8 @@ export default function CounselorProfilePage() {
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div>
-                  <p className="font-medium">
-                    {i.studentName}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {i.note}
-                  </p>
+                  <p className="font-medium">{i.studentName}</p>
+                  <p className="text-sm text-muted-foreground">{i.note}</p>
                 </div>
                 <span className="text-xs text-muted-foreground">
                   {formatDate(i.createdAt)}
@@ -193,12 +136,8 @@ export default function CounselorProfilePage() {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3">
-        <ActionButton disabled>
-          Assign Students
-        </ActionButton>
-        <ActionButton disabled>
-          Deactivate Counselor
-        </ActionButton>
+        <ActionButton disabled>Assign Students</ActionButton>
+        <ActionButton disabled>Deactivate Counselor</ActionButton>
       </div>
     </div>
   );
@@ -208,14 +147,14 @@ export default function CounselorProfilePage() {
    Helpers
 ------------------------------ */
 
-function formatDateTime(date: string) {
+function formatDateTime(date) {
   return new Date(date).toLocaleDateString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });
 }
 
-function formatDate(date: string) {
+function formatDate(date) {
   return new Date(date).toLocaleDateString(undefined, {
     dateStyle: "medium",
   });
@@ -225,13 +164,7 @@ function formatDate(date: string) {
    UI Components
 ------------------------------ */
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }) {
   return (
     <div className="rounded-xl border bg-white p-4 dark:bg-gray-900">
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
@@ -240,35 +173,19 @@ function Section({
   );
 }
 
-function InfoCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function InfoCard({ title, children }) {
   return (
     <div className="rounded-xl border bg-white p-4 dark:bg-gray-900">
-      <p className="mb-2 text-sm text-muted-foreground">
-        {title}
-      </p>
+      <p className="mb-2 text-sm text-muted-foreground">{title}</p>
       {children}
     </div>
   );
 }
 
-function TableHead({
-  children,
-  className = "",
-  scope = "col",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  scope?: "col" | "row";
-}) {
+function TableHead({ children, className = "" }) {
   return (
     <th
-      scope={scope}
+      scope="col"
       className={`px-4 py-3 text-left font-medium text-muted-foreground ${className}`}
     >
       {children}
@@ -276,27 +193,15 @@ function TableHead({
   );
 }
 
-function TableCell({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <td className={`px-4 py-3 ${className}`}>
-      {children}
-    </td>
-  );
+function TableCell({ children, className = "" }) {
+  return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }
 
-function StatusBadge({ active }: { active: boolean }) {
+function StatusBadge({ active }) {
   return (
     <span
       className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
-        active
-          ? "bg-green-100 text-green-700"
-          : "bg-gray-200 text-gray-700"
+        active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-700"
       }`}
     >
       {active ? "Active" : "Inactive"}
@@ -304,8 +209,8 @@ function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
-function RiskBadge({ level }: { level: RiskLevel }) {
-  const styles: Record<RiskLevel, string> = {
+function RiskBadge({ level }) {
+  const styles = {
     LOW: "bg-green-100 text-green-700",
     MEDIUM: "bg-yellow-100 text-yellow-800",
     HIGH: "bg-red-100 text-red-700",
@@ -320,13 +225,7 @@ function RiskBadge({ level }: { level: RiskLevel }) {
   );
 }
 
-function ActionButton({
-  children,
-  disabled = false,
-}: {
-  children: React.ReactNode;
-  disabled?: boolean;
-}) {
+function ActionButton({ children, disabled = false }) {
   return (
     <button
       disabled={disabled}
@@ -348,10 +247,7 @@ function ProfileSkeleton() {
       <div className="h-8 w-64 rounded bg-gray-200" />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-24 rounded-xl bg-gray-200"
-          />
+          <div key={i} className="h-24 rounded-xl bg-gray-200" />
         ))}
       </div>
       <div className="h-48 rounded-xl bg-gray-200" />

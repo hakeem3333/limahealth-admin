@@ -5,41 +5,18 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 
 /* -----------------------------
-   Types
------------------------------- */
-
-type RiskLevel = "LOW" | "MEDIUM" | "HIGH";
-
-interface DashboardAlert {
-  id: string;
-  studentName: string;
-  riskLevel: RiskLevel;
-}
-
-interface SchoolDashboard {
-  studentsCount: number;
-  counselorsCount: number;
-  activeWearables: number;
-  highRiskAlerts: number;
-  recentAlerts: DashboardAlert[];
-}
-
-/* -----------------------------
    Page
 ------------------------------ */
 
 export default function SchoolAdminDashboard() {
-  const { data, isLoading, error } =
-    useQuery <
-    SchoolDashboard >
-    {
-      queryKey: ["school-dashboard"],
-      staleTime: 60_000,
-      queryFn: async () => {
-        const res = await api.get("/school/dashboard");
-        return res.data;
-      },
-    };
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["school-dashboard"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const res = await api.get("/school/dashboard");
+      return res.data;
+    },
+  });
 
   if (isLoading) return <DashboardSkeleton />;
 
@@ -103,7 +80,7 @@ export default function SchoolAdminDashboard() {
                 </div>
 
                 <Link
-                  href={`/school-admin/alerts`}
+                  href="/school-admin/alerts"
                   className="text-sm text-blue-600 hover:underline"
                 >
                   View
@@ -131,17 +108,7 @@ export default function SchoolAdminDashboard() {
    UI Components
 ------------------------------ */
 
-function StatCard({
-  title,
-  value,
-  href,
-  variant = "default",
-}: {
-  title: string,
-  value: number,
-  href: string,
-  variant?: "default" | "danger",
-}) {
+function StatCard({ title, value, href, variant = "default" }) {
   return (
     <Link
       href={href}
@@ -161,7 +128,7 @@ function StatCard({
   );
 }
 
-function QuickAction({ title, href }: { title: string, href: string }) {
+function QuickAction({ title, href }) {
   return (
     <Link
       href={href}
@@ -172,8 +139,8 @@ function QuickAction({ title, href }: { title: string, href: string }) {
   );
 }
 
-function RiskBadge({ level }: { level: RiskLevel }) {
-  const styles: Record<RiskLevel, string> = {
+function RiskBadge({ level }) {
+  const styles = {
     LOW: "bg-green-100 text-green-700",
     MEDIUM: "bg-yellow-100 text-yellow-800",
     HIGH: "bg-red-100 text-red-700",

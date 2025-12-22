@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 
-/**
- * School Admin – Reports & Analytics
- */
+/* -----------------------------
+   Page Component
+------------------------------ */
+
 export default function ReportsPage() {
-  const [range, setRange] = (useState < "7d") | "30d" | ("90d" > "30d");
+  const [range, setRange] = useState("7d");
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["school-reports", range],
@@ -23,12 +24,18 @@ export default function ReportsPage() {
   if (isLoading) return <ReportsSkeleton />;
 
   if (error) {
-    return <div className="text-red-600">Failed to load reports.</div>;
+    return (
+      <div className="text-red-600">
+        {error.message || "Failed to load reports."}
+      </div>
+    );
   }
+
+  if (!data) return null;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header & Range Selector */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Reports</h1>
@@ -36,28 +43,29 @@ export default function ReportsPage() {
             School-level wellbeing analytics
           </p>
         </div>
-
-        {/* Date Range */}
         <RangeSelector value={range} onChange={setRange} />
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard title="Students Monitored">{data.studentsCount}</StatCard>
-
-        <StatCard title="High-Risk Students">{data.highRiskCount}</StatCard>
-
-        <StatCard title="Alerts Generated">{data.alertsCount}</StatCard>
-
-        <StatCard title="Interventions">{data.interventionsCount}</StatCard>
+        <StatCard title="Students Monitored">
+          {data.studentsCount ?? 0}
+        </StatCard>
+        <StatCard title="High-Risk Students">
+          {data.highRiskCount ?? 0}
+        </StatCard>
+        <StatCard title="Alerts Generated">{data.alertsCount ?? 0}</StatCard>
+        <StatCard title="Interventions">
+          {data.interventionsCount ?? 0}
+        </StatCard>
       </div>
 
       {/* Risk Distribution */}
       <Section title="Risk Distribution">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <RiskCard level="LOW" value={data.riskDistribution.LOW} />
-          <RiskCard level="MEDIUM" value={data.riskDistribution.MEDIUM} />
-          <RiskCard level="HIGH" value={data.riskDistribution.HIGH} />
+          <RiskCard level="LOW" value={data.riskDistribution?.LOW ?? 0} />
+          <RiskCard level="MEDIUM" value={data.riskDistribution?.MEDIUM ?? 0} />
+          <RiskCard level="HIGH" value={data.riskDistribution?.HIGH ?? 0} />
         </div>
       </Section>
 
@@ -74,7 +82,7 @@ export default function ReportsPage() {
               </tr>
             </thead>
             <tbody>
-              {data.counselorActivity.length === 0 ? (
+              {data.counselorActivity?.length === 0 ? (
                 <tr>
                   <td
                     colSpan={4}
@@ -84,7 +92,7 @@ export default function ReportsPage() {
                   </td>
                 </tr>
               ) : (
-                data.counselorActivity.map((c: any) => (
+                data.counselorActivity?.map((c) => (
                   <tr key={c.id} className="border-t">
                     <TableCell>{c.name}</TableCell>
                     <TableCell>{c.students}</TableCell>
@@ -98,7 +106,6 @@ export default function ReportsPage() {
         </div>
       </Section>
 
-      {/* Notes */}
       <p className="text-xs text-muted-foreground">
         Reports are anonymized and aggregated to protect student privacy.
       </p>
@@ -107,16 +114,10 @@ export default function ReportsPage() {
 }
 
 /* -----------------------------
-   UI Components
+   Components
 ------------------------------ */
 
-function RangeSelector({
-  value,
-  onChange,
-}: {
-  value: "7d" | "30d" | "90d",
-  onChange: (v: any) => void,
-}) {
+function RangeSelector({ value, onChange }) {
   return (
     <select
       value={value}
@@ -130,7 +131,7 @@ function RangeSelector({
   );
 }
 
-function Section({ title, children }: any) {
+function Section({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <h2 className="mb-3 text-lg font-semibold">{title}</h2>
@@ -139,7 +140,7 @@ function Section({ title, children }: any) {
   );
 }
 
-function StatCard({ title, children }: any) {
+function StatCard({ title, children }) {
   return (
     <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
       <p className="text-sm text-muted-foreground mb-2">{title}</p>
@@ -148,13 +149,7 @@ function StatCard({ title, children }: any) {
   );
 }
 
-function RiskCard({
-  level,
-  value,
-}: {
-  level: "LOW" | "MEDIUM" | "HIGH",
-  value: number,
-}) {
+function RiskCard({ level, value }) {
   const styles = {
     LOW: "bg-green-100 text-green-700",
     MEDIUM: "bg-yellow-100 text-yellow-800",
@@ -168,7 +163,7 @@ function RiskCard({
   );
 }
 
-function TableHead({ children }: any) {
+function TableHead({ children }) {
   return (
     <th className="px-4 py-3 text-left font-medium text-muted-foreground">
       {children}
@@ -176,7 +171,7 @@ function TableHead({ children }: any) {
   );
 }
 
-function TableCell({ children }: any) {
+function TableCell({ children }) {
   return <td className="px-4 py-3">{children}</td>;
 }
 
