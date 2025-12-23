@@ -11,10 +11,33 @@ export default function SuperAdminDashboardPage() {
       const res = await api.get("/super-admin/dashboard");
       return res.data;
     },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 
-  if (isLoading) return <p>Loading dashboard...</p>;
-  if (error) return <p>Failed to load dashboard.</p>;
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground">Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Failed to load super admin dashboard:", error);
+    return (
+      <div className="p-8 text-center text-red-500">
+        Failed to load dashboard.
+      </div>
+    );
+  }
+
+  const stats = [
+    { title: "Schools", value: data?.schoolsCount ?? 0 },
+    { title: "Students", value: data?.studentsCount ?? 0 },
+    { title: "Admins", value: data?.adminsCount ?? 0 },
+    { title: "Active Alerts", value: data?.alertsCount ?? 0 },
+  ];
 
   return (
     <div className="space-y-8">
@@ -28,10 +51,9 @@ export default function SuperAdminDashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Schools" value={data.schoolsCount} />
-        <StatCard title="Students" value={data.studentsCount} />
-        <StatCard title="Admins" value={data.adminsCount} />
-        <StatCard title="Active Alerts" value={data.alertsCount} />
+        {stats.map((stat) => (
+          <StatCard key={stat.title} title={stat.title} value={stat.value} />
+        ))}
       </div>
 
       {/* Quick Actions */}
