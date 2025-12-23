@@ -1,29 +1,74 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/axios";
+
+/* -----------------------------
+   Helpers
+------------------------------ */
+
+function useDebounce(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}
+
+/* -----------------------------
+   Page
+------------------------------ */
 
 export default function AuditLogsPage() {
   const [action, setAction] = useState("");
   const [actorRole, setActorRole] = useState("");
+  const [page, setPage] = useState(1);
 
-  const {
-    data = [],
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["audit-logs", action, actorRole],
+  const debouncedAction = useDebounce(action);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["audit-logs", debouncedAction, actorRole, page],
     queryFn: async () => {
       const res = await api.get("/super-admin/audit-logs", {
-        params: { action, actorRole },
+        params: {
+          action: debouncedAction,
+          actorRole,
+          page,
+          limit: 20,
+        },
       });
       return res.data;
     },
+    keepPreviousData: true,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
-  if (isLoading) return <p>Loading audit logs...</p>;
-  if (error) return <p>Failed to load audit logs.</p>;
+  const logs = Array.isArray(data?.logs) ? data.logs : [];
+  const hasNextPage = Boolean(data?.hasNextPage);
+
+  /* -----------------------------
+     States
+  ------------------------------ */
+
+  if (isLoading) {
+    return <p className="p-8 text-center">Loading audit logs...</p>;
+  }
+
+  if (error) {
+    console.error("Audit logs fetch failed:", error);
+    return (
+      <p className="p-8 text-center text-red-500">Failed to load audit logs.</p>
+    );
+  }
+
+  /* -----------------------------
+     UI
+  ------------------------------ */
 
   return (
     <div className="space-y-6">
@@ -40,12 +85,19 @@ export default function AuditLogsPage() {
         <input
           placeholder="Action (e.g. UPDATE_SCHOOL)"
           value={action}
-          onChange={(e) => setAction(e.target.value)}
+          onChange={(e) => {
+            setPage(1);
+            setAction(e.target.value);
+          }}
           className="border rounded-md px-3 py-2 text-sm"
         />
+
         <select
           value={actorRole}
-          onChange={(e) => setActorRole(e.target.value)}
+          onChange={(e) => {
+            setPage(1);
+            setActorRole(e.target.value);
+          }}
           className="border rounded-md px-3 py-2 text-sm"
         >
           <option value="">All Roles</option>
@@ -54,7 +106,7 @@ export default function AuditLogsPage() {
         </select>
       </div>
 
-      {/* Logs Table */}
+      {/* Table */}
       <div className="overflow-x-auto rounded-xl border bg-white dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800">
@@ -67,27 +119,62 @@ export default function AuditLogsPage() {
               <Th>Date</Th>
             </tr>
           </thead>
+
           <tbody>
-            {data.map((log) => (
-              <tr key={log.id} className="border-t">
-                <Td>{log.actorName}</Td>
-                <Td>{log.actorRole}</Td>
-                <Td className="font-mono text-xs">{log.action}</Td>
-                <Td>
-                  {log.targetType}
-                  {log.targetId && (
-                    <span className="text-xs text-muted-foreground">
-                      {" "}
-                      ({log.targetId})
-                    </span>
-                  )}
+            {logs.length > 0 ? (
+              logs.map((log) => (
+                <tr key={log.id} className="border-t">
+                  <Td>{log.actorName || "N/A"}</Td>
+                  <Td>{log.actorRole || "N/A"}</Td>
+                  <Td className="font-mono text-xs">{log.action || "N/A"}</Td>
+                  <Td>
+                    {log.targetType || "N/A"}
+                    {log.targetId && (
+                      <span className="text-xs text-muted-foreground">
+                        {" "}
+                        ({log.targetId})
+                      </span>
+                    )}
+                  </Td>
+                  <Td>{log.ipAddress || "N/A"}</Td>
+                  <Td>
+                    {log.createdAt
+                      ? new Date(log.createdAt).toLocaleString()
+                      : "N/A"}
+                  </Td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <Td
+                  colSpan={6}
+                  className="text-center py-10 text-muted-foreground"
+                >
+                  No audit logs found for the selected filters.
                 </Td>
-                <Td>{log.ipAddress}</Td>
-                <Td>{new Date(log.createdAt).toLocaleString()}</Td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={page === 1}
+          className="border rounded-md px-3 py-1 text-sm disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        <button
+          onClick={() => setPage((p) => p + 1)}
+          disabled={!hasNextPage}
+          className="border rounded-md px-3 py-1 text-sm disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   );
@@ -105,6 +192,6 @@ function Th({ children }) {
   );
 }
 
-function Td({ children }) {
-  return <td className="px-4 py-3">{children}</td>;
+function Td({ children, className = "" }) {
+  return <td className={`px-4 py-3 ${className}`}>{children}</td>;
 }
