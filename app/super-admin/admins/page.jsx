@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { api } from "@/lib/axios";
 
 export default function SuperAdminAdminsPage() {
   const queryClient = useQueryClient();
+  const [activeAdminId, setActiveAdminId] = useState(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["super-admin-admins"],
@@ -14,27 +16,46 @@ export default function SuperAdminAdminsPage() {
       return res.data;
     },
     retry: 1,
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
   const resetPassword = useMutation({
     mutationFn: (adminId) =>
       api.post(`/super-admin/admins/${adminId}/reset-password`),
-    onSuccess: () => alert("Password reset email sent"),
-    onError: () => alert("Failed to reset password. Is the server running?"),
+    onMutate: (adminId) => setActiveAdminId(adminId),
+    onSuccess: () => {
+      alert("Password reset email sent");
+    },
+    onError: (err) => {
+      console.error("Reset password failed:", err);
+      alert("Failed to reset password");
+    },
+    onSettled: () => setActiveAdminId(null),
   });
 
   const deactivateAdmin = useMutation({
     mutationFn: (adminId) =>
       api.patch(`/super-admin/admins/${adminId}/deactivate`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["super-admin-admins"] }),
-    onError: () => alert("Failed to deactivate admin."),
+    onMutate: (adminId) => setActiveAdminId(adminId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["super-admin-admins"],
+      });
+    },
+    onError: (err) => {
+      console.error("Deactivate admin failed:", err);
+      alert("Failed to deactivate admin");
+    },
+    onSettled: () => setActiveAdminId(null),
   });
 
-  if (isLoading) return <p className="p-8 text-center">Loading admins...</p>;
+  if (isLoading) {
+    return <p className="p-8 text-center">Loading admins...</p>;
+  }
 
-  // Safety check for offline server or missing data
   if (error || !data) {
+    console.error("Fetch admins error:", error, data);
     return (
       <div className="p-8 text-center border-2 border-dashed rounded-xl">
         <p className="text-red-500 font-medium">Server connection failed.</p>
@@ -45,7 +66,6 @@ export default function SuperAdminAdminsPage() {
     );
   }
 
-  // Ensure data is an array
   const adminsList = Array.isArray(data) ? data : [];
 
   return (
@@ -78,48 +98,56 @@ export default function SuperAdminAdminsPage() {
               <Th className="text-right">Actions</Th>
             </tr>
           </thead>
+
           <tbody>
             {adminsList.length > 0 ? (
-              adminsList.map((admin) => (
-                <tr key={admin?.id} className="border-t">
-                  <Td className="font-medium">{admin?.name || "N/A"}</Td>
-                  <Td>{admin?.email || "N/A"}</Td>
-                  <Td>{admin?.schoolName || "N/A"}</Td>
-                  <Td>
-                    <StatusBadge status={admin?.status} />
-                  </Td>
-                  <Td>
-                    {admin?.createdAt
-                      ? new Date(admin.createdAt).toLocaleDateString()
-                      : "N/A"}
-                  </Td>
-                  <Td className="text-right space-x-3">
-                    <Link
-                      href={`/super-admin/admins/${admin?.id}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      View
-                    </Link>
-                    <button
-                      onClick={() => resetPassword.mutate(admin?.id)}
-                      disabled={resetPassword.isPending}
-                      className="text-yellow-600 hover:underline disabled:opacity-50"
-                    >
-                      {resetPassword.isPending ? "..." : "Reset Password"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm("Deactivate this admin?"))
-                          deactivateAdmin.mutate(admin?.id);
-                      }}
-                      disabled={deactivateAdmin.isPending}
-                      className="text-red-600 hover:underline disabled:opacity-50"
-                    >
-                      {deactivateAdmin.isPending ? "..." : "Deactivate"}
-                    </button>
-                  </Td>
-                </tr>
-              ))
+              adminsList.map((admin) => {
+                const isActive = activeAdminId === admin?.id;
+
+                return (
+                  <tr key={admin?.id || admin?.email} className="border-t">
+                    <Td className="font-medium">{admin?.name || "N/A"}</Td>
+                    <Td>{admin?.email || "N/A"}</Td>
+                    <Td>{admin?.schoolName || "N/A"}</Td>
+                    <Td>
+                      <StatusBadge status={admin?.status} />
+                    </Td>
+                    <Td>
+                      {admin?.createdAt
+                        ? new Date(admin.createdAt).toLocaleDateString()
+                        : "N/A"}
+                    </Td>
+                    <Td className="text-right space-x-3">
+                      <Link
+                        href={`/super-admin/admins/${admin?.id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        View
+                      </Link>
+
+                      <button
+                        onClick={() => resetPassword.mutate(admin?.id)}
+                        disabled={isActive}
+                        className="text-yellow-600 hover:underline disabled:opacity-50"
+                      >
+                        {isActive ? "..." : "Reset Password"}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (confirm("Deactivate this admin?")) {
+                            deactivateAdmin.mutate(admin?.id);
+                          }
+                        }}
+                        disabled={isActive}
+                        className="text-red-600 hover:underline disabled:opacity-50"
+                      >
+                        {isActive ? "..." : "Deactivate"}
+                      </button>
+                    </Td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <Td
@@ -156,12 +184,15 @@ function Td({ children, className = "" }) {
 }
 
 function StatusBadge({ status }) {
+  const styles = {
+    ACTIVE: "bg-green-100 text-green-700",
+    INACTIVE: "bg-red-100 text-red-700",
+  };
+
   return (
     <span
       className={`rounded-full px-2 py-1 text-xs font-medium ${
-        status === "ACTIVE"
-          ? "bg-green-100 text-green-700"
-          : "bg-red-100 text-red-700"
+        styles[status] || "bg-gray-100 text-gray-700"
       }`}
     >
       {status || "UNKNOWN"}
