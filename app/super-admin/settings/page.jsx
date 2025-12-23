@@ -6,7 +6,9 @@ import { api } from "@/lib/axios";
 
 export default function SuperAdminSettingsPage() {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState < any > null;
+  const [form, setForm] = useState(null);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["platform-settings"],
@@ -14,10 +16,15 @@ export default function SuperAdminSettingsPage() {
   });
 
   const mutation = useMutation({
-    mutationFn: (values: any) => api.put("/super-admin/settings", values),
+    mutationFn: (values) => api.put("/super-admin/settings", values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["platform-settings"] });
-      alert("Platform settings updated");
+      setSuccessMsg("Platform settings updated successfully!");
+      setErrorMsg("");
+    },
+    onError: () => {
+      setErrorMsg("Failed to save settings. Please try again.");
+      setSuccessMsg("");
     },
   });
 
@@ -25,11 +32,21 @@ export default function SuperAdminSettingsPage() {
     if (data) setForm(data);
   }, [data]);
 
-  if (isLoading || !form) return <p>Loading settings…</p>;
-  if (error) return <p>Failed to load settings.</p>;
+  if (isLoading || !form)
+    return (
+      <p className="p-8 text-center text-muted-foreground">Loading settings…</p>
+    );
+  if (error)
+    return (
+      <p className="p-8 text-center text-red-500">Failed to load settings.</p>
+    );
 
-  const update = (key: string, value: any) =>
-    setForm((prev: any) => ({ ...prev, [key]: value }));
+  const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    mutation.mutate(form);
+  };
 
   return (
     <div className="max-w-3xl space-y-8">
@@ -40,13 +57,10 @@ export default function SuperAdminSettingsPage() {
         </p>
       </header>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          mutation.mutate(form);
-        }}
-        className="space-y-6"
-      >
+      {successMsg && <p className="text-green-600 font-medium">{successMsg}</p>}
+      {errorMsg && <p className="text-red-600 font-medium">{errorMsg}</p>}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Governance */}
         <Section title="Platform Governance">
           <Toggle
@@ -54,13 +68,11 @@ export default function SuperAdminSettingsPage() {
             checked={form.allowSchoolSignup}
             onChange={(v) => update("allowSchoolSignup", v)}
           />
-
           <Toggle
             label="Require Email Verification"
             checked={form.requireEmailVerification}
             onChange={(v) => update("requireEmailVerification", v)}
           />
-
           <Select
             label="Default School Status"
             value={form.defaultSchoolStatus}
@@ -82,7 +94,6 @@ export default function SuperAdminSettingsPage() {
             max={60}
             onChange={(v) => update("adminOtpExpiryMinutes", v)}
           />
-
           <Toggle
             label="Enforce Audit Logging"
             checked={form.enforceAuditLogging}
@@ -97,7 +108,6 @@ export default function SuperAdminSettingsPage() {
             checked={form.enableWearables}
             onChange={(v) => update("enableWearables", v)}
           />
-
           <Toggle
             label="Enable Alerts System"
             checked={form.enableAlerts}
@@ -114,7 +124,6 @@ export default function SuperAdminSettingsPage() {
             max={120}
             onChange={(v) => update("dataRetentionMonths", v)}
           />
-
           <Toggle
             label="Enforce Data Anonymization"
             checked={form.enforceAnonymization}
@@ -136,7 +145,7 @@ export default function SuperAdminSettingsPage() {
 
 /* ---------------- UI Primitives ---------------- */
 
-function Section({ title, children }: any) {
+function Section({ title, children }) {
   return (
     <div className="rounded-xl border p-5 space-y-4 bg-white dark:bg-gray-900">
       <h2 className="font-semibold">{title}</h2>
@@ -145,7 +154,7 @@ function Section({ title, children }: any) {
   );
 }
 
-function Toggle({ label, checked, onChange }: any) {
+function Toggle({ label, checked, onChange }) {
   return (
     <label className="flex justify-between items-center text-sm">
       <span>{label}</span>
@@ -158,7 +167,7 @@ function Toggle({ label, checked, onChange }: any) {
   );
 }
 
-function NumberField({ label, value, onChange, min, max }: any) {
+function NumberField({ label, value, onChange, min, max }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span>{label}</span>
@@ -174,7 +183,7 @@ function NumberField({ label, value, onChange, min, max }: any) {
   );
 }
 
-function Select({ label, value, options, onChange }: any) {
+function Select({ label, value, options, onChange }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
       <span>{label}</span>
@@ -183,7 +192,7 @@ function Select({ label, value, options, onChange }: any) {
         onChange={(e) => onChange(e.target.value)}
         className="border rounded-md px-3 py-2"
       >
-        {options.map((opt: string) => (
+        {options.map((opt) => (
           <option key={opt} value={opt}>
             {opt.replaceAll("_", " ")}
           </option>

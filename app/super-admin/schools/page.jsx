@@ -11,13 +11,17 @@ export default function SuperAdminSchoolsPage() {
       const res = await api.get("/super-admin/schools");
       return res.data;
     },
-    // This stops React Query from retrying infinitely if the server is down
     retry: 1,
   });
 
-  if (isLoading) return <p className="p-8 text-center">Loading schools...</p>;
+  if (isLoading) {
+    return (
+      <p className="p-8 text-center text-muted-foreground">
+        Loading schools...
+      </p>
+    );
+  }
 
-  // Check if there was an error OR if the data simply didn't arrive
   if (error || !data) {
     return (
       <div className="p-8 text-center border-2 border-dashed rounded-xl">
@@ -31,9 +35,10 @@ export default function SuperAdminSchoolsPage() {
     );
   }
 
-  // Ensure 'schools' is an array. If your API nests the array (e.g., data.schools),
-  // change 'data' to 'data.schools' below.
-  const schoolsList = Array.isArray(data) ? data : [];
+  // Ensure schools list is an array and sort alphabetically by name
+  const schoolsList = Array.isArray(data)
+    ? [...data].sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+    : [];
 
   return (
     <div className="space-y-6">
@@ -48,7 +53,7 @@ export default function SuperAdminSchoolsPage() {
 
         <Link
           href="/super-admin/schools/create"
-          className="rounded-md bg-black px-4 py-2 text-white hover:bg-gray-800"
+          className="rounded-md bg-black px-4 py-2 text-white hover:bg-gray-800 transition"
         >
           + Add School
         </Link>
@@ -84,10 +89,10 @@ export default function SuperAdminSchoolsPage() {
                       ? new Date(school.createdAt).toLocaleDateString()
                       : "N/A"}
                   </Td>
-                  <Td className="text-right">
+                  <Td className="text-right space-x-2">
                     <Link
                       href={`/super-admin/schools/${school?.id}`}
-                      className="text-blue-600 hover:underline mr-3"
+                      className="text-blue-600 hover:underline"
                     >
                       View / Edit
                     </Link>
@@ -136,14 +141,22 @@ function Td({ children, className = "" }) {
 }
 
 function StatusBadge({ status }) {
+  let bgClass = "bg-gray-100 text-gray-700";
+
+  switch (status) {
+    case "ACTIVE":
+      bgClass = "bg-green-100 text-green-700";
+      break;
+    case "SUSPENDED":
+      bgClass = "bg-red-100 text-red-700";
+      break;
+    case "PENDING":
+      bgClass = "bg-yellow-100 text-yellow-700";
+      break;
+  }
+
   return (
-    <span
-      className={`rounded-full px-2 py-1 text-xs font-medium ${
-        status === "ACTIVE"
-          ? "bg-green-100 text-green-700"
-          : "bg-red-100 text-red-700"
-      }`}
-    >
+    <span className={`rounded-full px-2 py-1 text-xs font-medium ${bgClass}`}>
       {status || "UNKNOWN"}
     </span>
   );
