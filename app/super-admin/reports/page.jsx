@@ -7,7 +7,7 @@ import { api } from "@/lib/axios";
 export default function SuperAdminReportsPage() {
   const [range, setRange] = useState("30d");
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, isFetching } = useQuery({
     queryKey: ["super-admin-reports", range],
     queryFn: async () => {
       const res = await api.get("/super-admin/reports", {
@@ -15,10 +15,38 @@ export default function SuperAdminReportsPage() {
       });
       return res.data;
     },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+    keepPreviousData: true,
   });
 
-  if (isLoading) return <p>Loading reports...</p>;
-  if (error) return <p>Failed to load reports.</p>;
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-muted-foreground">Loading reports...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Failed to load reports:", error);
+    return (
+      <div className="p-8 text-center text-red-500">
+        Failed to load reports.
+      </div>
+    );
+  }
+
+  const stats = [
+    { title: "Schools", value: data?.schools ?? 0 },
+    { title: "Students", value: data?.students ?? 0 },
+    { title: "Admins", value: data?.admins ?? 0 },
+    { title: "Alerts Triggered", value: data?.alerts ?? 0 },
+    { title: "High Risk Students", value: data?.highRiskStudents ?? 0 },
+    { title: "Wearables Linked", value: data?.wearableLinked ?? 0 },
+  ];
+
+  const isEmpty = stats.every((stat) => stat.value === 0);
 
   return (
     <div className="space-y-8">
@@ -42,19 +70,27 @@ export default function SuperAdminReportsPage() {
           <option value="30d">Last 30 days</option>
           <option value="90d">Last 90 days</option>
         </select>
+
+        {isFetching && (
+          <span className="text-xs text-muted-foreground">Updating…</span>
+        )}
       </div>
+
+      {/* Empty State */}
+      {isEmpty && (
+        <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground">
+          No activity recorded for the selected period.
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <StatCard title="Schools" value={data.schools} />
-        <StatCard title="Students" value={data.students} />
-        <StatCard title="Admins" value={data.admins} />
-        <StatCard title="Alerts Triggered" value={data.alerts} />
-        <StatCard title="High Risk Students" value={data.highRiskStudents} />
-        <StatCard title="Wearables Linked" value={data.wearableLinked} />
+        {stats.map((stat) => (
+          <StatCard key={stat.title} title={stat.title} value={stat.value} />
+        ))}
       </div>
 
-      {/* Placeholder for Charts */}
+      {/* Trends Placeholder */}
       <div className="rounded-xl border bg-white dark:bg-gray-900 p-6">
         <h2 className="font-semibold mb-2">Trends</h2>
         <p className="text-sm text-muted-foreground">
