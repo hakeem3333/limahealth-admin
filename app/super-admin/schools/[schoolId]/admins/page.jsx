@@ -10,12 +10,18 @@ export default function SchoolAdminsPage() {
   const queryClient = useQueryClient();
   const [adminId, setAdminId] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const {
+    data = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["school-admins", schoolId],
     queryFn: async () => {
       const res = await api.get(`/super-admin/schools/${schoolId}/admins`);
       return res.data;
     },
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
   });
 
   const assignAdmin = useMutation({
@@ -25,6 +31,7 @@ export default function SchoolAdminsPage() {
       queryClient.invalidateQueries({ queryKey: ["school-admins", schoolId] });
       setAdminId("");
     },
+    onError: (err) => console.error("Failed to assign admin:", err),
   });
 
   const removeAdmin = useMutation({
@@ -32,9 +39,21 @@ export default function SchoolAdminsPage() {
       api.delete(`/super-admin/schools/${schoolId}/admins/${id}`),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["school-admins", schoolId] }),
+    onError: (err) => console.error("Failed to remove admin:", err),
   });
 
-  if (isLoading) return <p>Loading admins...</p>;
+  if (isLoading) {
+    return (
+      <p className="p-8 text-center text-muted-foreground">Loading admins...</p>
+    );
+  }
+
+  if (error) {
+    console.error("Failed to fetch school admins:", error);
+    return (
+      <p className="p-8 text-center text-red-500">Failed to load admins.</p>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -50,31 +69,42 @@ export default function SchoolAdminsPage() {
         />
         <button
           onClick={() => assignAdmin.mutate()}
-          className="bg-black text-white px-4 rounded-md"
+          disabled={!adminId || assignAdmin.isPending}
+          className="bg-black text-white px-4 rounded-md disabled:opacity-50"
         >
-          Assign
+          {assignAdmin.isPending ? "Assigning..." : "Assign"}
         </button>
       </div>
 
-      {/* List of Admins */}
+      {/* Admin List */}
       <div className="border rounded-xl">
-        {data.map((admin) => (
-          <div
-            key={admin.id}
-            className="flex items-center justify-between p-3 border-b last:border-none"
-          >
-            <div>
-              <p className="font-medium">{admin.name}</p>
-              <p className="text-xs text-muted-foreground">{admin.email}</p>
-            </div>
-            <button
-              onClick={() => removeAdmin.mutate(admin.id)}
-              className="text-red-600 text-sm"
+        {data.length === 0 ? (
+          <p className="p-4 text-center text-muted-foreground">
+            No admins assigned yet.
+          </p>
+        ) : (
+          data.map((admin) => (
+            <div
+              key={admin.id}
+              className="flex items-center justify-between p-3 border-b last:border-none"
             >
-              Remove
-            </button>
-          </div>
-        ))}
+              <div>
+                <p className="font-medium">{admin.name}</p>
+                <p className="text-xs text-muted-foreground">{admin.email}</p>
+              </div>
+              <button
+                onClick={() => {
+                  if (confirm("Remove this admin?"))
+                    removeAdmin.mutate(admin.id);
+                }}
+                disabled={removeAdmin.isPending}
+                className="text-red-600 text-sm disabled:opacity-50"
+              >
+                {removeAdmin.isPending ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
