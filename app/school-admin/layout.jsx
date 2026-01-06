@@ -12,7 +12,7 @@ import {
   HomeIcon,
   Bars3Icon,
   XMarkIcon,
-  LogoutIcon,
+  ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
 /**
@@ -104,7 +104,7 @@ export default function SchoolAdminLayout({ children }) {
               School Admin
             </span>
             <button className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-1">
-              <LogoutIcon className="h-5 w-5" />
+              <ArrowLeftOnRectangleIcon className="h-5 w-5" />
               Logout
             </button>
           </div>
