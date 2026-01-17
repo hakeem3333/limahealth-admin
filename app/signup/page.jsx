@@ -54,7 +54,7 @@ export default function SignupPage() {
         console.log("Dev Email Preview:", res.data.previewLink);
       }
 
-      router.push("/signup/verify-email");
+      // router.push("/verify-email");
     } catch (err) {
       // Logic to handle Zod field errors from our new backend middleware
       if (err?.response?.data?.errors) {
