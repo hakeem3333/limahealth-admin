@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/axios";
 
@@ -10,49 +10,26 @@ export default function VerifyOtpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Ensure temp token exists
-  useEffect(() => {
-    const tempToken = sessionStorage.getItem("admin_temp_token");
-    if (!tempToken) {
-      router.replace("/login");
-    }
-  }, [router]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     if (otp.length !== 6) {
-      setError("Enter the 6-digit code sent to your email");
+      setError("Please enter the 6-digit code");
       return;
     }
 
     try {
       setLoading(true);
+      await api.post("/auth/admin/verify-otp", { otp });
 
-      const tempToken = sessionStorage.getItem("admin_temp_token");
-
-      const res = await api.post(
-        "/auth/admin/verify-otp",
-        { otp },
-        {
-          headers: {
-            Authorization: `Bearer ${tempToken}`,
-          },
-        }
-      );
-
-      // Save final access token
-      localStorage.setItem("access_token", res.data.token);
-
-      // Cleanup
-      sessionStorage.removeItem("admin_temp_token");
-
+      // If successful, the backend has cleared the temp cookie
+      // and set the final 'access_token' and 'refresh_token' cookies.
       router.push("/dashboard");
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-          "Invalid or expired code. Please try again."
+          "Invalid or expired code. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -69,23 +46,22 @@ export default function VerifyOtpPage() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           {error && (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
+            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-100">
               {error}
             </div>
           )}
 
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-medium">One-Time Password</span>
+            <span className="font-medium text-gray-700">One-Time Password</span>
             <input
               type="text"
               inputMode="numeric"
+              autoFocus
               maxLength={6}
               value={otp}
-              onChange={(e) =>
-                setOtp(e.target.value.replace(/\D/g, ""))
-              }
-              className="text-center tracking-widest text-lg rounded-md border px-3 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="••••••"
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              className="text-center tracking-[0.5em] text-2xl font-bold rounded-md border border-gray-300 px-3 py-4 focus:outline-none focus:ring-2 focus:ring-black transition-all"
+              placeholder="000000"
               required
             />
           </label>
@@ -93,9 +69,17 @@ export default function VerifyOtpPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-black py-3 text-white font-medium hover:bg-gray-800 disabled:opacity-50"
+            className="w-full rounded-md bg-black py-3 text-white font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
             {loading ? "Verifying..." : "Verify & Sign In"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => router.replace("/login")}
+            className="w-full text-sm text-gray-500 hover:text-black transition-colors"
+          >
+            Back to login
           </button>
         </form>
       </div>
