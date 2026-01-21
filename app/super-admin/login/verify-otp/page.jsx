@@ -39,7 +39,7 @@ export default function SuperAdminVerifyOtpPage() {
     try {
       setLoading(true);
       // Hits the specific Super Admin verification endpoint
-      await api.post("/auth/super/verify-otp", { otp });
+      await api.post("/super-admin/verify-otp", { otp });
 
       router.push("/super-admin/dashboard");
     } catch (err) {
@@ -131,7 +131,7 @@ export default function SuperAdminVerifyOtpPage() {
             )}
             <button
               type="button"
-              onClick={() => router.replace("/super-login")}
+              onClick={() => router.replace("/super-admin/login")}
               className="text-sm text-slate-400 hover:text-slate-900 transition-colors"
             >
               Cancel and return

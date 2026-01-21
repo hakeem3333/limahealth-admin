@@ -28,10 +28,10 @@ export default function SuperAdminLoginPage() {
 
       // Hits the new Super Admin specific endpoint
       // The backend sets the 'super_temp_token' HTTP-only cookie
-      await api.post("/auth/super/login", form);
+      await api.post("/super-admin/login", form);
 
       // Redirect to the Super Admin specific OTP verification path
-      router.push("/super-login/verify");
+      router.push("/super-admin/login/verify-otp");
     } catch (err) {
       setError(
         err?.response?.data?.message || "Invalid Super Admin credentials.",

@@ -13,6 +13,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowLeftOnRectangleIcon,
+  CloudArrowUpIcon,
 } from "@heroicons/react/24/outline";
 
 /**
@@ -24,6 +25,11 @@ export default function SchoolAdminLayout({ children }) {
 
   const navItems = [
     { label: "Dashboard", href: "/school-admin/dashboard", icon: HomeIcon },
+    {
+      label: "Bulk Enrollment",
+      href: "/school-admin/bulk-enrollment",
+      icon: CloudArrowUpIcon,
+    },
     { label: "Students", href: "/school-admin/students", icon: UsersIcon },
     { label: "Counselors", href: "/school-admin/counselors", icon: UserIcon },
     {
