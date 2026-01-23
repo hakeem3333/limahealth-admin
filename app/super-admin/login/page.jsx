@@ -26,13 +26,17 @@ export default function SuperAdminLoginPage() {
     try {
       setLoading(true);
 
-      // Hits the new Super Admin specific endpoint
-      // The backend sets the 'super_temp_token' HTTP-only cookie
       await api.post("/super-admin/login", form);
 
-      // Redirect to the Super Admin specific OTP verification path
       router.push("/super-admin/login/verify-otp");
     } catch (err) {
+      // 🌐 Network / server unreachable
+      if (err?.type === "NETWORK_ERROR") {
+        setError("Unable to connect to the server. Please try again later.");
+        return;
+      }
+
+      // 🔐 Backend auth error
       setError(
         err?.response?.data?.message || "Invalid Super Admin credentials.",
       );

@@ -77,7 +77,7 @@ export default function BulkEnrollPage() {
     formData.append("file", file);
 
     try {
-      const { data } = await api.post("/admin/setup/bulk-upload", formData, {
+      const { data } = await api.post("/auth/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(data);

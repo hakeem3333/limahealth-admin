@@ -29,7 +29,7 @@ export default function SuperAdminSchoolsPage() {
           Server is currently unreachable.
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          Please ensure your backend is running at the correct URL.
+          Please try again later.
         </p>
       </div>
     );

@@ -9,11 +9,11 @@ export default function VerifyOtpPage() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(600);
 
   const inputRef = useRef(null);
 
-  // 1. Timer Logic
+  // Timer logic
   useEffect(() => {
     if (timeLeft <= 0) return;
     const timer = setInterval(() => {
@@ -42,13 +42,19 @@ export default function VerifyOtpPage() {
       await api.post("/auth/admin/verify-otp", { otp });
       router.push("/school-admin/dashboard");
     } catch (err) {
+      // 🌐 Network / backend unreachable
+      if (err?.type === "NETWORK_ERROR") {
+        setError("Unable to connect to the server. Please try again later.");
+        return;
+      }
+
+      // 🔐 OTP validation / expiry
       setError(err?.response?.data?.message || "Invalid or expired code.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. Handle Focus
   const handleBoxClick = () => {
     inputRef.current?.focus();
   };
@@ -74,7 +80,6 @@ export default function VerifyOtpPage() {
           )}
 
           <div className="relative">
-            {/* Hidden Real Input */}
             <input
               ref={inputRef}
               type="text"
@@ -86,7 +91,6 @@ export default function VerifyOtpPage() {
               autoFocus
             />
 
-            {/* Visual Squares */}
             <div
               className="flex justify-between gap-2"
               onClick={handleBoxClick}

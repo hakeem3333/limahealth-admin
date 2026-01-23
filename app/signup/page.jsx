@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({}); // New: track field-specific errors
+  const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState(""); // NEW: form-level error
 
   const [form, setForm] = useState({
     schoolName: "",
@@ -21,15 +22,18 @@ export default function SignupPage() {
 
   const update = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    // Clear error for a field when user starts typing again
+
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
+
+    if (formError) setFormError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
+    setFormError("");
 
     if (form.password !== form.confirmPassword) {
       setErrors({ confirmPassword: "Passwords do not match" });
@@ -49,21 +53,30 @@ export default function SignupPage() {
       setLoading(true);
       const res = await api.post("/auth/admin/signup", payload);
 
-      // In dev mode, we might get a preview link from our new backend logic
       if (res.data.previewLink) {
         console.log("Dev Email Preview:", res.data.previewLink);
       }
 
       // router.push("/verify-email");
     } catch (err) {
-      // Logic to handle Zod field errors from our new backend middleware
+      // 🌐 Network / server unreachable
+      if (err?.type === "NETWORK_ERROR") {
+        setFormError(
+          "Unable to connect to the server. Please try again later.",
+        );
+        return;
+      }
+
+      // 🧩 Zod / field-level validation errors
       if (err?.response?.data?.errors) {
         setErrors(err.response.data.errors);
-      } else {
-        alert(
-          err?.response?.data?.message || "Signup failed. Please try again.",
-        );
+        return;
       }
+
+      // ❌ Generic backend error
+      setFormError(
+        err?.response?.data?.message || "Signup failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -78,12 +91,18 @@ export default function SignupPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          {formError && (
+            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-100 text-center">
+              {formError}
+            </div>
+          )}
+
           <Section title="School Information">
             <Input
               label="School Name"
               required
               value={form.schoolName}
-              error={errors.name} // Maps to backend 'name'
+              error={errors.name}
               onChange={(v) => update("schoolName", v)}
             />
             <Input
@@ -98,7 +117,7 @@ export default function SignupPage() {
               type="email"
               required
               value={form.adminEmail}
-              error={errors.contact_email} // Maps to backend 'contact_email'
+              error={errors.contact_email}
               onChange={(v) => update("adminEmail", v)}
             />
           </Section>

@@ -26,15 +26,17 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      // The backend now sets an HTTP-only 'admin_temp_token' cookie.
-      // Ensure your axios instance has { withCredentials: true }
       await api.post("/auth/admin/login", form);
 
-      // If the request succeeds, the cookie is already in the browser.
-      // We just move to the next screen.
       router.push("/login/verify-otp");
     } catch (err) {
-      // Show generic error message from backend for security
+      // 🌐 Network / server unreachable
+      if (err?.type === "NETWORK_ERROR") {
+        setError("Unable to connect to the server. Please try again later.");
+        return;
+      }
+
+      // 🔐 Backend auth error (generic on purpose)
       setError(err?.response?.data?.message || "Invalid email or password.");
     } finally {
       setLoading(false);
@@ -53,7 +55,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           {error && (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-100 animate-pulse">
+            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-100">
               {error}
             </div>
           )}
