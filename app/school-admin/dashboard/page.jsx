@@ -3,13 +3,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
+import SubscriptionGuard from "@/components/SubscriptionGuard"; // The guard we made
+import {
+  AlertCircle,
+  Users,
+  Activity,
+  ShieldAlert,
+  PlusCircle,
+} from "lucide-react";
 
-/**
- * School Admin Dashboard
- * Shows high-level overview of a single school
- */
 export default function SchoolAdminDashboard() {
-  console.log("API Base URL:", process.env.NEXT_PUBLIC_API_BASE_URL); // 🔹 log the base URL
+  const { user } = useAuth();
 
   const {
     data = {},
@@ -18,135 +23,225 @@ export default function SchoolAdminDashboard() {
   } = useQuery({
     queryKey: ["school-dashboard"],
     queryFn: async () => {
-      try {
-        console.log("Calling /school/dashboard endpoint..."); // 🔹 log before request
-        const res = await api.get(
-          "/school/dashboard"
-        );
-        console.log("Response data:", res.data); // 🔹 log response
-        return res.data;
-      } catch (err) {
-        console.error("Error fetching dashboard:", err); // 🔹 log error
-        throw err; // re-throw to keep react-query in error state
-      }
+      const res = await api.get("/school/dashboard");
+      return res.data;
+    },
+    // Don't retry if it's a payment issue
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 402) return false;
+      return failureCount < 3;
     },
   });
 
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
+  if (isLoading) return <DashboardSkeleton />;
 
-  if (error) {
-    return (
-      <div className="text-red-600">
-        Failed to load dashboard data. Check console for details.
-      </div>
-    );
-  }
+  // Special handling for Payment Required errors
+  const isPaymentRequired = error?.response?.status === 402;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">School Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of students, counselors, and wellness activity
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            {user?.school?.name || "School"} Dashboard
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Monitoring wellness and safety for your institution.
+          </p>
+        </div>
+
+        {/* Quick Access Status Badge */}
+        <div
+          className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border ${
+            user?.schoolStatus === "ACTIVE"
+              ? "bg-green-50 text-green-700 border-green-100"
+              : "bg-amber-50 text-amber-700 border-amber-100"
+          }`}
+        >
+          Status: {user?.schoolStatus?.replace("_", " ")}
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard
-          title="Students"
-          value={data.studentsCount || 0}
-          link="/school-admin/students"
-        />
-        <StatCard
-          title="Counselors"
-          value={data.counselorsCount || 0}
-          link="/school-admin/counselors"
-        />
-        <StatCard
-          title="Active Wearables"
-          value={data.activeWearables || 0}
-          link="/school-admin/wearables"
-        />
-        <StatCard
-          title="High-Risk Alerts"
-          value={data.highRiskAlerts || 0}
-          link="/school-admin/alerts"
-          danger
-        />
-      </div>
+      <SubscriptionGuard status={user?.schoolStatus}>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            title="Total Students"
+            value={data.studentsCount}
+            icon={<Users className="w-5 h-5 text-blue-600" />}
+            link="/school-admin/students"
+          />
+          <StatCard
+            title="Active Counselors"
+            value={data.counselorsCount}
+            icon={<ShieldAlert className="w-5 h-5 text-purple-600" />}
+            link="/school-admin/counselors"
+          />
+          <StatCard
+            title="Live Wearables"
+            value={data.activeWearables}
+            icon={<Activity className="w-5 h-5 text-green-600" />}
+            link="/school-admin/wearables"
+          />
+          <StatCard
+            title="Critical Alerts"
+            value={data.highRiskAlerts}
+            icon={<AlertCircle className="w-5 h-5 text-red-600" />}
+            link="/school-admin/alerts"
+            danger
+          />
+        </div>
 
-      {/* Alerts */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border p-4">
-        <h2 className="text-lg font-semibold mb-3">Recent Alerts</h2>
+        {/* Alerts Section */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-gray-900">
+              Recent Risk Alerts
+            </h2>
+            <Link
+              href="/school-admin/alerts"
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+            >
+              View All
+            </Link>
+          </div>
 
-        {!data.recentAlerts || data.recentAlerts.length === 0 ? (
-          <p className="text-muted-foreground">No recent alerts 🎉</p>
-        ) : (
-          <ul className="space-y-2">
-            {data.recentAlerts.map((alert) => (
-              <li
-                key={alert.id}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">{alert.studentName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Risk Level: {alert.riskLevel}
-                  </p>
-                </div>
+          <div className="p-6">
+            {!data.recentAlerts || data.recentAlerts.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400">No recent alerts recorded 🎉</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                      <th className="pb-4">Student</th>
+                      <th className="pb-4">Risk Level</th>
+                      <th className="pb-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {data.recentAlerts.map((alert) => (
+                      <tr key={alert.id} className="group">
+                        <td className="py-4 font-medium text-gray-900">
+                          {alert.studentName}
+                        </td>
+                        <td className="py-4">
+                          <span
+                            className={`px-2 py-1 rounded-md text-xs font-bold ${
+                              alert.riskLevel === "CRITICAL"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {alert.riskLevel}
+                          </span>
+                        </td>
+                        <td className="py-4 text-right">
+                          <Link
+                            href={`/school-admin/alerts`}
+                            className="text-blue-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Respond
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
 
-                <Link
-                  href={`/school-admin/alerts`}
-                  className="text-sm text-blue-600 hover:underline"
-                >
-                  View
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <QuickAction
+            title="Register Student"
+            icon={<PlusCircle className="w-4 h-4" />}
+            href="/school-admin/students"
+          />
+          <QuickAction
+            title="Onboard Counselor"
+            icon={<PlusCircle className="w-4 h-4" />}
+            href="/school-admin/counselors"
+          />
+          <QuickAction
+            title="System Reports"
+            icon={<Activity className="w-4 h-4" />}
+            href="/school-admin/reports"
+          />
+        </div>
+      </SubscriptionGuard>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <QuickAction title="Add Student" href="/school-admin/students" />
-        <QuickAction title="Add Counselor" href="/school-admin/counselors" />
-        <QuickAction title="View Reports" href="/school-admin/reports" />
-      </div>
+      {/* Fallback Error (If not payment related) */}
+      {error && !isPaymentRequired && (
+        <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm">
+          Error loading metrics. Please refresh or contact support.
+        </div>
+      )}
     </div>
   );
 }
 
 /* -----------------------------
-   Components
+    Components
 ----------------------------- */
 
-function StatCard({ title, value, link, danger = false }) {
+function StatCard({ title, value, link, icon, danger = false }) {
   return (
     <Link
       href={link}
-      className={`rounded-xl border p-4 hover:shadow transition ${
-        danger ? "border-red-500" : ""
+      className={`group bg-white rounded-2xl border p-6 transition-all hover:shadow-lg hover:-translate-y-1 ${
+        danger ? "border-red-100 bg-red-50/10" : "border-gray-100"
       }`}
     >
-      <p className="text-sm text-muted-foreground">{title}</p>
-      <p className={`text-3xl font-bold ${danger ? "text-red-600" : ""}`}>
-        {value}
+      <div className="flex items-center justify-between mb-4">
+        <div
+          className={`p-2 rounded-lg ${danger ? "bg-red-100" : "bg-blue-50"}`}
+        >
+          {icon}
+        </div>
+        <ArrowRightIcon className="w-4 h-4 text-gray-300 group-hover:text-blue-600 transition-colors" />
+      </div>
+      <p className="text-sm font-medium text-gray-500">{title}</p>
+      <p
+        className={`text-3xl font-bold mt-1 ${danger ? "text-red-600" : "text-gray-900"}`}
+      >
+        {value || 0}
       </p>
     </Link>
   );
 }
 
-function QuickAction({ title, href }) {
+function ArrowRightIcon(props) {
+  return (
+    <svg
+      {...props}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5l7 7-7 7"
+      />
+    </svg>
+  );
+}
+
+function QuickAction({ title, icon, href }) {
   return (
     <Link
       href={href}
-      className="rounded-xl border p-4 text-center font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+      className="flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white p-4 font-bold text-gray-700 hover:bg-gray-50 hover:border-blue-200 transition-all"
     >
+      {icon}
       {title}
     </Link>
   );
@@ -155,15 +250,13 @@ function QuickAction({ title, href }) {
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className="h-8 w-48 bg-gray-200 rounded" />
-
+      <div className="h-12 w-64 bg-gray-200 rounded-lg" />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 bg-gray-200 rounded-xl" />
+          <div key={i} className="h-32 bg-gray-200 rounded-2xl" />
         ))}
       </div>
-
-      <div className="h-40 bg-gray-200 rounded-xl" />
+      <div className="h-64 bg-gray-200 rounded-2xl" />
     </div>
   );
 }

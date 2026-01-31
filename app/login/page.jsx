@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/axios";
 import Link from "next/link";
+import { Loader2, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,18 +26,18 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-
+      // Step 1: Password Verification.
+      // This sets the 'admin_temp_token' cookie and triggers the OTP email.
       await api.post("/auth/admin/login", form);
 
       router.push("/login/verify-otp");
     } catch (err) {
-      // 🌐 Network / server unreachable
       if (err?.type === "NETWORK_ERROR") {
-        setError("Unable to connect to the server. Please try again later.");
+        setError(
+          "Unable to connect to the server. Please check your internet.",
+        );
         return;
       }
-
-      // 🔐 Backend auth error (generic on purpose)
       setError(err?.response?.data?.message || "Invalid email or password.");
     } finally {
       setLoading(false);
@@ -45,17 +46,22 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-center">
-          Sign in to LimaHealth
-        </h1>
-        <p className="mt-2 text-sm text-center text-gray-600">
-          Access your school administration dashboard
-        </p>
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-gray-100">
+        <div className="text-center mb-8">
+          <div className="mx-auto h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+            <Lock className="h-6 w-6 text-blue-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            Sign in to LimaHealth
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            School Administration Portal
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-100">
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-100 animate-in fade-in slide-in-from-top-1">
               {error}
             </div>
           )}
@@ -63,42 +69,52 @@ export default function LoginPage() {
           <Input
             label="Email address"
             type="email"
+            placeholder="admin@school.edu"
             required
             value={form.email}
             onChange={(v) => update("email", v)}
           />
 
-          <Input
-            label="Password"
-            type="password"
-            required
-            value={form.password}
-            onChange={(v) => update("password", v)}
-          />
-
-          <div className="flex items-center justify-between text-sm">
-            <Link
-              href="/forgot-password"
-              className="text-blue-600 hover:underline font-medium"
-            >
-              Forgot password?
-            </Link>
+          <div className="space-y-1">
+            <Input
+              label="Password"
+              type="password"
+              placeholder="••••••••"
+              required
+              value={form.password}
+              onChange={(v) => update("password", v)}
+            />
+            <div className="flex justify-end">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-blue-600 hover:underline font-medium"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-black py-3 text-white font-medium hover:bg-gray-800 disabled:opacity-50 transition-all active:scale-[0.98]"
+            className="w-full rounded-xl bg-blue-600 py-4 text-white font-bold hover:bg-blue-700 disabled:opacity-50 transition-all active:scale-[0.98] shadow-lg shadow-blue-100 flex justify-center items-center group"
           >
-            {loading ? "Verifying..." : "Sign In"}
+            {loading ? (
+              <Loader2 className="animate-spin h-5 w-5" />
+            ) : (
+              <>
+                Continue to OTP
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600 border-t pt-6">
+        <div className="mt-8 text-center text-sm text-gray-500 border-t border-gray-100 pt-6">
           Don’t have a school account?{" "}
           <Link
             href="/signup"
-            className="font-semibold text-blue-600 hover:underline"
+            className="font-bold text-blue-600 hover:text-blue-700"
           >
             Register your school
           </Link>
@@ -112,16 +128,24 @@ export default function LoginPage() {
    UI Components
 ------------------------------ */
 
-function Input({ label, value, onChange, type = "text", required }) {
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+  placeholder,
+}) {
   return (
-    <div className="flex flex-col gap-1 text-sm">
-      <span className="font-medium text-gray-700">{label}</span>
+    <div className="flex flex-col gap-1.5 text-sm">
+      <span className="font-semibold text-gray-700 ml-1">{label}</span>
       <input
         type={type}
         value={value}
         required={required}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+        className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
       />
     </div>
   );
