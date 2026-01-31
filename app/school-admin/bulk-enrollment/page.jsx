@@ -215,7 +215,7 @@ export default function BulkEnrollPage() {
                 Some records failed. Download the report to see why.
               </p>
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL}${result.failedDownload}`}
+                href={`${process.env.NEXT_PUBLIC_API_BASE_URL}${result.failedDownload}`}
                 target="_blank"
                 className="flex items-center gap-2 text-sm font-bold text-red-600 hover:text-red-700"
               >

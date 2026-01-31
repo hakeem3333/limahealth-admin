@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function middleware(request) {
   const { pathname } = request.nextUrl;
 
   // 1. Check for Super Admin routes
@@ -13,10 +12,14 @@ export function middleware(request: NextRequest) {
   }
 
   // 2. Check for School Admin routes
-  if (pathname.startsWith('/school-admin')) {
-    const schoolToken = request.cookies.get('access_token');
+  if (pathname.startsWith("/school-admin")) {
+    const schoolToken = request.cookies.get("access_token");
+    // DEBUG LOG
+    console.log(`PATH: ${pathname} | TOKEN EXISTS: ${!!schoolToken}`);
+
     if (!schoolToken) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      console.log("❌ No token found, redirecting to login...");
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
