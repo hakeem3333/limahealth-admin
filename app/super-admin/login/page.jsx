@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/axios";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react"; // Imported icons
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // State for visibility
 
   const [form, setForm] = useState({
     email: "",
@@ -25,18 +27,13 @@ export default function SuperAdminLoginPage() {
 
     try {
       setLoading(true);
-
       await api.post("/super-admin/login", form);
-
       router.push("/super-admin/login/verify-otp");
     } catch (err) {
-      // 🌐 Network / server unreachable
       if (err?.type === "NETWORK_ERROR") {
         setError("Unable to connect to the server. Please try again later.");
         return;
       }
-
-      // 🔐 Backend auth error
       setError(
         err?.response?.data?.message || "Invalid Super Admin credentials.",
       );
@@ -77,10 +74,13 @@ export default function SuperAdminLoginPage() {
 
           <Input
             label="Security Password"
-            type="password"
+            type={showPassword ? "text" : "password"} // Dynamic type
             required
             value={form.password}
             onChange={(v) => update("password", v)}
+            isPasswordField={true} // New prop to trigger the eye
+            showPassword={showPassword}
+            togglePassword={() => setShowPassword(!showPassword)}
           />
 
           <button
@@ -106,20 +106,44 @@ export default function SuperAdminLoginPage() {
 }
 
 /* -----------------------------
-   UI Components
+    UI Components
 ------------------------------ */
 
-function Input({ label, value, onChange, type = "text", required }) {
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+  isPasswordField,
+  showPassword,
+  togglePassword,
+}) {
   return (
     <div className="flex flex-col gap-1 text-sm">
       <span className="font-medium text-slate-700">{label}</span>
-      <input
-        type={type}
-        value={value}
-        required={required}
-        onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all bg-slate-50"
-      />
+      <div className="relative">
+        <input
+          type={type}
+          value={value}
+          required={required}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all bg-slate-50"
+        />
+        {isPasswordField && (
+          <button
+            type="button"
+            onClick={togglePassword}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

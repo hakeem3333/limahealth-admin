@@ -121,49 +121,108 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
-import { useAuth } from "@/context/AuthContext"; // Using your new hook
-import { CheckIcon, Loader2, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { CheckIcon, Loader2, LogOut, AlertCircle } from "lucide-react";
 
 export default function BillingPage() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const { user, loading, logout } = useAuth();
 
+  useEffect(() => {
+    console.log("AuthContext User:", user);
+    console.log("Loading state:", loading);
+  }, [user, loading]);
+
   const subscriptionMutation = useMutation({
     mutationFn: async (planType) => {
-      const response = await api.post("/billing/initialize", {
+      const payload = {
         schoolId: user?.schoolId,
         adminEmail: user?.email,
         planTier: planType,
-      });
+      };
+
+      console.log("Submitting payment initialization:", payload);
+
+      const response = await api.post("/billing/initialize", payload);
       return response.data;
     },
     onSuccess: (data) => {
-      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
     },
     onError: (error) => {
-      alert(error.response?.data?.error || "Payment failed to initialize.");
+      const message =
+        error.response?.data?.error || "Payment failed to initialize.";
+      const details = error.response?.data?.details;
+      console.error("Subscription Error:", { message, details });
+      alert(message + (details ? ` (${JSON.stringify(details)})` : ""));
     },
   });
 
   const handleSubscribe = (type) => {
+    // Final validation before calling the API
+    if (!user?.schoolId || !user?.email) {
+      console.error("Mutation blocked: User context is empty", { user });
+      alert(
+        "Your session details are still loading. Please wait a moment and try again.",
+      );
+      return;
+    }
+
     setSelectedPlan(type);
     subscriptionMutation.mutate(type);
   };
 
+  // 1. Initial Loading State (Fetching Token/Session)
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="animate-spin h-10 w-10 text-blue-600 mx-auto" />
+          <p className="mt-4 text-gray-500 font-medium">
+            Loading your account...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Error State: Token exists but User data failed to fetch
+  if (!user || !user.schoolId) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
+          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900">
+            Session Sync Issue
+          </h2>
+          <p className="mt-2 text-gray-600">
+            We couldn't verify your school details. This usually happens if the
+            session expired or the profile failed to load.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-6 w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Refresh Page
+          </button>
+          <button
+            onClick={logout}
+            className="mt-3 w-full py-3 text-gray-500 font-medium hover:text-gray-700 transition-colors"
+          >
+            Sign out and try again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="py-16 px-4 max-w-5xl mx-auto">
-      {/* Utility Header */}
+    <div className="py-16 px-4 max-w-5xl mx-auto animate-in fade-in duration-500">
       <div className="flex justify-end mb-8">
         <button
           onClick={logout}
@@ -179,8 +238,8 @@ export default function BillingPage() {
           Activate {user?.school?.name || "Your School"}
         </h1>
         <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-          Your account is approved! Choose a plan below to unlock student
-          analytics and wearable integration.
+          Choose a plan below to unlock student analytics and wearable
+          integration.
         </p>
       </div>
 
@@ -193,7 +252,7 @@ export default function BillingPage() {
           </p>
           <p className="mt-6 flex items-baseline">
             <span className="text-5xl font-extrabold tracking-tight text-gray-900">
-              $99
+              €200
             </span>
             <span className="ml-1 text-xl font-medium text-gray-500">/mo</span>
           </p>
@@ -218,7 +277,7 @@ export default function BillingPage() {
           </button>
         </div>
 
-        {/* Yearly Plan - Best Value */}
+        {/* Yearly Plan */}
         <div className="flex flex-col p-8 bg-blue-600 border border-blue-700 rounded-2xl shadow-xl relative transform md:scale-105 ring-4 ring-blue-100">
           <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl uppercase tracking-wider">
             Save 20%
@@ -228,7 +287,9 @@ export default function BillingPage() {
             Full year of access at a discounted rate.
           </p>
           <p className="mt-6 flex items-baseline text-white">
-            <span className="text-5xl font-extrabold tracking-tight">$990</span>
+            <span className="text-5xl font-extrabold tracking-tight">
+              €2000
+            </span>
             <span className="ml-1 text-xl font-medium text-blue-100">/yr</span>
           </p>
 

@@ -151,8 +151,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/axios";
-import { useAuth } from "@/hooks/useAuth";
-import { Loader2, ShieldCheck, ArrowLeft, RefreshCcw } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { 
+  Loader2, 
+  ShieldCheck, 
+  ArrowLeft, 
+  RefreshCcw, 
+  Eye, 
+  EyeOff 
+} from "lucide-react";
 
 export default function VerifyOtpPage() {
   const router = useRouter();
@@ -161,6 +168,7 @@ export default function VerifyOtpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [timeLeft, setTimeLeft] = useState(600);
+  const [showOtp, setShowOtp] = useState(true); // Default to true for better UX on OTP
 
   const inputRef = useRef(null);
 
@@ -190,15 +198,8 @@ export default function VerifyOtpPage() {
 
     try {
       setLoading(true);
-
-      // 1. Verify OTP
       await api.post("/auth/admin/verify-otp", { otp });
-
-      // 2. Refresh Auth Context to get role and schoolStatus
       await refreshUser();
-
-      // 3. Navigation is handled by middleware automatically if we go to dashboard,
-      // but we can be explicit here for a faster feel:
       router.push("/school-admin/dashboard");
     } catch (err) {
       setError(err?.response?.data?.message || "Invalid or expired code.");
@@ -213,94 +214,107 @@ export default function VerifyOtpPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-gray-100">
+      <div className="w-full max-w-md rounded-[2.5rem] bg-white p-10 shadow-2xl shadow-blue-900/5 border border-gray-100">
         <div className="text-center mb-8">
-          <div className="mx-auto h-12 w-12 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-            <ShieldCheck className="h-6 w-6 text-blue-600" />
+          <div className="mx-auto h-14 w-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
+            <ShieldCheck className="h-7 w-7 text-blue-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-3xl font-black text-gray-900 tracking-tighter">
             Security Verification
           </h1>
-          <p className="mt-2 text-sm text-gray-600 px-6">
+          <p className="mt-3 text-sm text-gray-500 font-medium px-6 leading-relaxed">
             Enter the 6-digit code sent to your email. Expiring in{" "}
             <span
-              className={`font-mono font-bold ${timeLeft < 60 ? "text-red-500" : "text-blue-600"}`}
+              className={`font-mono font-black ${timeLeft < 60 ? "text-red-500" : "text-blue-600"}`}
             >
               {formatTime(timeLeft)}
             </span>
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-100 text-center animate-shake">
+            <div className="rounded-2xl bg-red-50 px-4 py-3 text-xs font-black uppercase tracking-widest text-red-600 border border-red-100 text-center animate-shake">
               {error}
             </div>
           )}
 
-          <div className="relative group cursor-text" onClick={handleBoxClick}>
-            <input
-              ref={inputRef}
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-              className="absolute inset-0 opacity-0 cursor-default"
-              autoFocus
-            />
+          <div className="space-y-4">
+            <div className="flex justify-between items-center px-1">
+               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Enter Passcode</label>
+               <button 
+                type="button"
+                onClick={() => setShowOtp(!showOtp)}
+                className="text-gray-400 hover:text-blue-600 transition-colors"
+               >
+                 {showOtp ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+               </button>
+            </div>
 
-            <div className="flex justify-between gap-2">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-12 h-14 border-2 rounded-xl flex items-center justify-center text-xl font-bold transition-all duration-200 ${
-                    otp.length === i
-                      ? "border-blue-600 ring-4 ring-blue-50"
-                      : "border-gray-200"
-                  } ${otp[i] ? "bg-blue-50/30 border-blue-200 text-blue-600" : "bg-white text-gray-900"}`}
-                >
-                  {otp[i] || ""}
-                </div>
-              ))}
+            <div className="relative group cursor-text" onClick={handleBoxClick}>
+              <input
+                ref={inputRef}
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                className="absolute inset-0 opacity-0 cursor-default"
+                autoFocus
+              />
+
+              <div className="flex justify-between gap-2">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-12 h-16 border-2 rounded-2xl flex items-center justify-center text-xl font-black transition-all duration-300 ${
+                      otp.length === i
+                        ? "border-blue-600 ring-4 ring-blue-50 scale-105"
+                        : "border-gray-100"
+                    } ${otp[i] ? "bg-white border-blue-100 text-blue-600 shadow-sm" : "bg-gray-50/50 text-gray-900"}`}
+                  >
+                    {otp[i] ? (showOtp ? otp[i] : "•") : ""}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading || timeLeft === 0 || otp.length < 6}
-            className="w-full rounded-xl bg-blue-600 py-4 text-white font-bold hover:bg-blue-700 disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 transition-all shadow-lg shadow-blue-100 flex justify-center items-center"
+            className="w-full rounded-2xl bg-gray-950 py-5 text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-blue-600 disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400 transition-all shadow-xl shadow-blue-900/10 flex justify-center items-center"
           >
             {loading ? (
               <Loader2 className="animate-spin h-5 w-5" />
             ) : (
-              "Complete Sign In"
+              "Authorize Access"
             )}
           </button>
 
-          <div className="flex flex-col items-center gap-4 pt-4 border-t border-gray-50">
+          <div className="flex flex-col items-center gap-6 pt-6 border-t border-gray-50">
             {timeLeft === 0 ? (
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="flex items-center text-sm font-bold text-blue-600 hover:text-blue-700"
+                className="flex items-center text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700"
               >
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Resend New Code
+                <RefreshCcw className="mr-2 h-3 w-3" />
+                Request New Protocol
               </button>
             ) : (
-              <p className="text-xs text-gray-400">
-                Didn't get a code? Check your spam folder.
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Check your inbound mail folders
               </p>
             )}
 
             <button
               type="button"
               onClick={() => router.replace("/login")}
-              className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+              className="flex items-center text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to login
+              <ArrowLeft className="mr-2 h-3 w-3" />
+              Return to terminal
             </button>
           </div>
         </form>

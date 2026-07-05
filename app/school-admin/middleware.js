@@ -108,7 +108,7 @@ export async function middleware(req) {
       }
 
       // B. If Payment is needed (New signup approved or subscription expired)
-      if (schoolStatus === "PAYMENT_REQUIRED") {
+      if (schoolStatus === "PAYMENT_REQUIRED" || schoolStatus === "EXPIRED") {
         // Allow access ONLY to the billing page
         if (pathname !== "/school-admin/billing") {
           return NextResponse.redirect(new URL("/school-admin/billing", req.url));
