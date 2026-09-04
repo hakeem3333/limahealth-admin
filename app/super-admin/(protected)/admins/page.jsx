@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { Plus, KeyRound, UserX } from "lucide-react";
 import { api } from "@/lib/axios";
+import Button from "@/components/super-admin/ui/Button";
+import Badge from "@/components/super-admin/ui/Badge";
+import Table, { Td } from "@/components/super-admin/ui/Table";
 
 export default function SuperAdminAdminsPage() {
   const queryClient = useQueryClient();
@@ -51,15 +55,15 @@ export default function SuperAdminAdminsPage() {
   });
 
   if (isLoading) {
-    return <p className="p-8 text-center">Loading admins...</p>;
+    return <div className="h-96 bg-gray-200 rounded-2xl animate-pulse" />;
   }
 
   if (error || !data) {
     console.error("Fetch admins error:", error, data);
     return (
-      <div className="p-8 text-center border-2 border-dashed rounded-xl">
-        <p className="text-red-500 font-medium">Server connection failed.</p>
-        <p className="text-sm text-muted-foreground mt-1">
+      <div className="rounded-2xl bg-white shadow-card p-12 text-center">
+        <p className="text-red-500 font-semibold">Server connection failed.</p>
+        <p className="text-sm text-gray-400 mt-1">
           Unable to fetch administrator list.
         </p>
       </div>
@@ -72,130 +76,79 @@ export default function SuperAdminAdminsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">School Admins</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage all school administrators
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal mb-2">
+            System Authority
+          </p>
+          <h1 className="font-display text-3xl font-bold text-lh-navy">
+            Global Admins
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage all organisation administrators
           </p>
         </div>
 
-        <Link
-          href="/super-admin/admins/create"
-          className="rounded-md bg-black px-4 py-2 text-white hover:bg-gray-800"
-        >
-          + Add Admin
+        <Link href="/super-admin/admins/create">
+          <Button>
+            <Plus className="h-4 w-4" />
+            Add Admin
+          </Button>
         </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border bg-white dark:bg-gray-900">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800">
-            <tr>
-              <Th>Name</Th>
-              <Th>Email</Th>
-              <Th>School</Th>
-              <Th>Status</Th>
-              <Th>Date Created</Th>
-              <Th className="text-right">Actions</Th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {adminsList.length > 0 ? (
-              adminsList.map((admin) => {
-                const isActive = activeAdminId === admin?.id;
-
-                return (
-                  <tr key={admin?.id || admin?.email} className="border-t">
-                    <Td className="font-medium">{admin?.name || "N/A"}</Td>
-                    <Td>{admin?.email || "N/A"}</Td>
-                    <Td>{admin?.schoolName || "N/A"}</Td>
-                    <Td>
-                      <StatusBadge status={admin?.status} />
-                    </Td>
-                    <Td>
-                      {admin?.createdAt
-                        ? new Date(admin.createdAt).toLocaleDateString()
-                        : "N/A"}
-                    </Td>
-                    <Td className="text-right space-x-3">
-                      <Link
-                        href={`/super-admin/admins/${admin?.id}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        View
-                      </Link>
-
-                      <button
-                        onClick={() => resetPassword.mutate(admin?.id)}
-                        disabled={isActive}
-                        className="text-yellow-600 hover:underline disabled:opacity-50"
-                      >
-                        {isActive ? "..." : "Reset Password"}
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          if (confirm("Deactivate this admin?")) {
-                            deactivateAdmin.mutate(admin?.id);
-                          }
-                        }}
-                        disabled={isActive}
-                        className="text-red-600 hover:underline disabled:opacity-50"
-                      >
-                        {isActive ? "..." : "Deactivate"}
-                      </button>
-                    </Td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <Td
-                  colSpan={6}
-                  className="text-center py-10 text-muted-foreground"
-                >
-                  No admins found.
+      <Table headers={["Name", "Email", "Organisation", "Status", "Registered", "Actions"]}>
+        {adminsList.length > 0 ? (
+          adminsList.map((admin) => {
+            const isActive = activeAdminId === admin?.id;
+            return (
+              <tr key={admin?.id || admin?.email} className="hover:bg-lh-teal-light/40 transition-colors">
+                <Td className="font-semibold text-gray-900">{admin?.name || "N/A"}</Td>
+                <Td className="text-gray-500">{admin?.email || "N/A"}</Td>
+                <Td className="text-gray-500">{admin?.orgName || "N/A"}</Td>
+                <Td>
+                  <Badge status={admin?.status} />
+                </Td>
+                <Td className="text-gray-500">
+                  {admin?.createdAt ? new Date(admin.createdAt).toLocaleDateString() : "N/A"}
+                </Td>
+                <Td className="text-right space-x-3 whitespace-nowrap">
+                  <Link
+                    href={`/super-admin/admins/${admin?.id}`}
+                    className="text-lh-teal font-semibold hover:underline"
+                  >
+                    View
+                  </Link>
+                  <button
+                    onClick={() => resetPassword.mutate(admin?.id)}
+                    disabled={isActive}
+                    className="inline-flex items-center gap-1 text-lh-accent font-semibold hover:underline disabled:opacity-50"
+                  >
+                    <KeyRound className="h-3.5 w-3.5" />
+                    {isActive ? "..." : "Reset"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm("Deactivate this admin?")) {
+                        deactivateAdmin.mutate(admin?.id);
+                      }
+                    }}
+                    disabled={isActive}
+                    className="inline-flex items-center gap-1 text-red-600 font-semibold hover:underline disabled:opacity-50"
+                  >
+                    <UserX className="h-3.5 w-3.5" />
+                    {isActive ? "..." : "Deactivate"}
+                  </button>
                 </Td>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            );
+          })
+        ) : (
+          <tr>
+            <Td colSpan={6} className="text-center py-16 text-gray-400">
+              No admins found.
+            </Td>
+          </tr>
+        )}
+      </Table>
     </div>
-  );
-}
-
-/* -----------------------------
-   UI Components
------------------------------- */
-
-function Th({ children, className = "" }) {
-  return (
-    <th
-      className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground ${className}`}
-    >
-      {children}
-    </th>
-  );
-}
-
-function Td({ children, className = "" }) {
-  return <td className={`px-4 py-3 ${className}`}>{children}</td>;
-}
-
-function StatusBadge({ status }) {
-  const styles = {
-    ACTIVE: "bg-green-100 text-green-700",
-    INACTIVE: "bg-red-100 text-red-700",
-  };
-
-  return (
-    <span
-      className={`rounded-full px-2 py-1 text-xs font-medium ${
-        styles[status] || "bg-gray-100 text-gray-700"
-      }`}
-    >
-      {status || "UNKNOWN"}
-    </span>
   );
 }

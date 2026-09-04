@@ -122,9 +122,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
+import { getOrgTheme } from "@/lib/orgTheme";
 import { CheckIcon, Loader2, LogOut, AlertCircle } from "lucide-react";
 
 export default function BillingPage() {
@@ -136,10 +137,25 @@ export default function BillingPage() {
     console.log("Loading state:", loading);
   }, [user, loading]);
 
+  // The 402 payload a PAYMENT_REQUIRED/EXPIRED org gets routed here with
+  // doesn't include orgType, so look it up the same way the login page does.
+  const { data: fetchedOrgType } = useQuery({
+    queryKey: ["billing-org-type", user?.email],
+    queryFn: async () => {
+      const res = await api.get("/auth/admin/org-type", {
+        params: { email: user.email },
+      });
+      return res.data?.orgType ?? null;
+    },
+    enabled: !!user?.email && !user?.org?.orgType,
+  });
+
+  const theme = getOrgTheme(user?.org?.orgType ?? fetchedOrgType);
+
   const subscriptionMutation = useMutation({
     mutationFn: async (planType) => {
       const payload = {
-        schoolId: user?.schoolId,
+        orgId: user?.orgId,
         adminEmail: user?.email,
         planTier: planType,
       };
@@ -165,7 +181,7 @@ export default function BillingPage() {
 
   const handleSubscribe = (type) => {
     // Final validation before calling the API
-    if (!user?.schoolId || !user?.email) {
+    if (!user?.orgId || !user?.email) {
       console.error("Mutation blocked: User context is empty", { user });
       alert(
         "Your session details are still loading. Please wait a moment and try again.",
@@ -182,7 +198,10 @@ export default function BillingPage() {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <Loader2 className="animate-spin h-10 w-10 text-blue-600 mx-auto" />
+          <Loader2
+            className="animate-spin h-10 w-10 mx-auto"
+            style={{ color: theme.primary }}
+          />
           <p className="mt-4 text-gray-500 font-medium">
             Loading your account...
           </p>
@@ -192,7 +211,7 @@ export default function BillingPage() {
   }
 
   // 2. Error State: Token exists but User data failed to fetch
-  if (!user || !user.schoolId) {
+  if (!user || !user.orgId) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 px-4">
         <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-200 text-center">
@@ -206,7 +225,8 @@ export default function BillingPage() {
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-6 w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+            className="mt-6 w-full py-3 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: theme.primary }}
           >
             Refresh Page
           </button>
@@ -235,7 +255,7 @@ export default function BillingPage() {
 
       <div className="text-center mb-12">
         <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-          Activate {user?.school?.name || "Your School"}
+          Activate {user?.org?.name || "Your Organisation"}
         </h1>
         <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
           Choose a plan below to unlock student analytics and wearable
@@ -267,7 +287,8 @@ export default function BillingPage() {
           <button
             onClick={() => handleSubscribe("monthly")}
             disabled={subscriptionMutation.isPending}
-            className="mt-8 w-full py-4 bg-white border-2 border-blue-600 text-blue-600 rounded-xl font-bold hover:bg-blue-50 transition-colors disabled:opacity-50 flex justify-center items-center"
+            className="mt-8 w-full py-4 bg-white border-2 rounded-xl font-bold transition-opacity hover:opacity-80 disabled:opacity-50 flex justify-center items-center"
+            style={{ borderColor: theme.primary, color: theme.primary }}
           >
             {subscriptionMutation.isPending && selectedPlan === "monthly" ? (
               <Loader2 className="animate-spin h-5 w-5" />
@@ -278,19 +299,25 @@ export default function BillingPage() {
         </div>
 
         {/* Yearly Plan */}
-        <div className="flex flex-col p-8 bg-blue-600 border border-blue-700 rounded-2xl shadow-xl relative transform md:scale-105 ring-4 ring-blue-100">
+        <div
+          className="flex flex-col p-8 rounded-2xl shadow-xl relative transform md:scale-105 ring-4 text-white"
+          style={{
+            background: `linear-gradient(135deg, ${theme.primary}, ${theme.primaryText})`,
+            "--tw-ring-color": theme.primaryLight,
+          }}
+        >
           <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl uppercase tracking-wider">
             Save 20%
           </div>
           <h2 className="text-xl font-bold text-white">Yearly Access</h2>
-          <p className="mt-2 text-sm text-blue-100">
+          <p className="mt-2 text-sm text-white/75">
             Full year of access at a discounted rate.
           </p>
           <p className="mt-6 flex items-baseline text-white">
             <span className="text-5xl font-extrabold tracking-tight">
               €2000
             </span>
-            <span className="ml-1 text-xl font-medium text-blue-100">/yr</span>
+            <span className="ml-1 text-xl font-medium text-white/75">/yr</span>
           </p>
 
           <ul className="mt-8 space-y-4 flex-1 text-white">
@@ -303,10 +330,11 @@ export default function BillingPage() {
           <button
             onClick={() => handleSubscribe("yearly")}
             disabled={subscriptionMutation.isPending}
-            className="mt-8 w-full py-4 bg-white text-blue-600 rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-lg disabled:opacity-50 flex justify-center items-center"
+            className="mt-8 w-full py-4 bg-white rounded-xl font-bold hover:bg-gray-100 transition-colors shadow-lg disabled:opacity-50 flex justify-center items-center"
+            style={{ color: theme.primary }}
           >
             {subscriptionMutation.isPending && selectedPlan === "yearly" ? (
-              <Loader2 className="animate-spin h-5 w-5 text-blue-600" />
+              <Loader2 className="animate-spin h-5 w-5" style={{ color: theme.primary }} />
             ) : (
               "Start Yearly Plan"
             )}

@@ -1,5 +1,23 @@
 import { NextResponse } from "next/server";
 
+// Reads the `role` claim out of a JWT without verifying its signature —
+// this is only used to route mismatched roles away immediately instead of
+// letting them load a page shell that 403s on every API call. It is NOT
+// the security boundary: every backend route independently re-checks the
+// verified, signed token via authenticate + authorizeRole regardless of
+// what this decode says, so a tampered/forged token still gets rejected
+// server-side even if it fools this check.
+function decodeJwtRole(token) {
+  try {
+    const payload = token.split(".")[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+    return JSON.parse(atob(padded))?.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
@@ -11,7 +29,7 @@ export function middleware(request) {
   // Super Admin protection
   if (pathname.startsWith("/super-admin") && !pathname.includes("/login")) {
     const token = request.cookies.get("super_access_token");
-    if (!token) {
+    if (!token || decodeJwtRole(token.value) !== "SUPER_ADMIN") {
       return NextResponse.redirect(new URL("/super-admin/login", request.url));
     }
   }
@@ -36,7 +54,7 @@ export function middleware(request) {
     const token     = request.cookies.get("access_token");
     const orgStatus = request.cookies.get("org_status")?.value;
 
-    if (!token) {
+    if (!token || decodeJwtRole(token.value) !== "ORG_ADMIN") {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import {
   UserPlus, Search, Filter, Watch, AlertCircle, ChevronRight, Mail, UserCircle2,
 } from "lucide-react";
@@ -22,15 +23,17 @@ export default function MembersPage() {
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const debouncedSearch = useDebouncedValue(search);
 
-  const { data = [], isLoading, error } = useQuery({
-    queryKey: ["members", search, status],
+  const { data = [], isLoading, isPlaceholderData, error } = useQuery({
+    queryKey: ["members", debouncedSearch, status],
     queryFn: async () => {
       const res = await api.get("/org/members", {
-        params: { search, status: status === "all" ? undefined : status },
+        params: { search: debouncedSearch, status: status === "all" ? undefined : status },
       });
       return res.data;
     },
+    placeholderData: keepPreviousData,
   });
 
   if (isLoading) return <MembersSkeleton />;
@@ -84,7 +87,9 @@ export default function MembersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+      <div
+        className={`bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>

@@ -141,12 +141,12 @@ export default function WearablesPage() {
             ) : (
               data.map((row) => (
                 <tr
-                  key={row.memberId}
+                  key={row.studentId}
                   className="group hover:bg-gray-50/30 transition-colors"
                 >
                   <TableCell>
                     <Link
-                      href={`/org-admin/students/${row.memberId}`}
+                      href={`/org-admin/members/${row.studentId}`}
                       className="font-bold text-gray-900 hover:text-blue-600"
                     >
                       {row.studentName}

@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
 import { api } from "@/lib/axios";
+import { playfairDisplay } from "@/lib/fonts";
 
 export default function SuperAdminVerifyOtpPage() {
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
 
   const inputRef = useRef(null);
 
@@ -38,9 +40,7 @@ export default function SuperAdminVerifyOtpPage() {
 
     try {
       setLoading(true);
-      // Hits the specific Super Admin verification endpoint
       await api.post("/super-admin/verify-otp", { otp });
-
       router.push("/super-admin/dashboard");
     } catch (err) {
       setError(
@@ -56,16 +56,16 @@ export default function SuperAdminVerifyOtpPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-2xl border border-slate-800">
+    <main className={`${playfairDisplay.variable} min-h-screen flex items-center justify-center bg-lh-navy px-4`}>
+      <div className="w-full max-w-md rounded-2xl bg-white p-10 shadow-2xl">
         <div className="flex flex-col items-center mb-6">
-          <div className="h-10 w-10 bg-slate-900 rounded-lg flex items-center justify-center mb-4">
-            <span className="text-white font-bold">L</span>
+          <div className="h-14 w-14 bg-lh-navy rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-lh-navy/30">
+            <ShieldCheck className="h-7 w-7 text-lh-accent" />
           </div>
-          <h1 className="text-2xl font-bold text-center text-slate-900">
+          <h1 className="font-display text-2xl font-bold text-center text-lh-navy">
             Security Verification
           </h1>
-          <p className="mt-2 text-sm text-center text-slate-500">
+          <p className="mt-2 text-sm text-center text-gray-500">
             Code sent to Super Admin email. Expires in{" "}
             <span className="font-mono font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">
               {formatTime(timeLeft)}
@@ -75,7 +75,7 @@ export default function SuperAdminVerifyOtpPage() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           {error && (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-100 text-center animate-shake">
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-100 text-center">
               {error}
             </div>
           )}
@@ -92,18 +92,15 @@ export default function SuperAdminVerifyOtpPage() {
               autoFocus
             />
 
-            <div
-              className="flex justify-between gap-2"
-              onClick={handleBoxClick}
-            >
+            <div className="flex justify-between gap-2" onClick={handleBoxClick}>
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className={`w-12 h-14 border-2 rounded-lg flex items-center justify-center text-xl font-bold transition-all ${
+                  className={`w-12 h-14 border-2 rounded-xl flex items-center justify-center text-xl font-bold transition-all ${
                     otp.length === i
-                      ? "border-slate-900 ring-4 ring-slate-900/10 shadow-sm"
-                      : "border-slate-200"
-                  } ${otp[i] ? "bg-slate-50 text-slate-900" : "bg-white"}`}
+                      ? "border-lh-teal ring-4 ring-lh-teal/10 shadow-sm"
+                      : "border-gray-200"
+                  } ${otp[i] ? "bg-gray-50 text-lh-navy" : "bg-white"}`}
                 >
                   {otp[i] || ""}
                 </div>
@@ -114,7 +111,7 @@ export default function SuperAdminVerifyOtpPage() {
           <button
             type="submit"
             disabled={loading || timeLeft === 0 || otp.length < 6}
-            className="w-full rounded-md bg-slate-900 py-3 text-white font-medium hover:bg-slate-800 disabled:opacity-50 disabled:bg-slate-400 transition-all active:scale-[0.98]"
+            className="w-full rounded-xl bg-lh-navy py-4 text-white text-xs font-bold uppercase tracking-[0.2em] hover:bg-lh-teal disabled:opacity-50 disabled:bg-gray-400 transition-all active:scale-[0.98] shadow-xl shadow-lh-navy/10"
           >
             {loading ? "Authorizing..." : "Verify & Continue"}
           </button>
@@ -124,7 +121,7 @@ export default function SuperAdminVerifyOtpPage() {
               <button
                 type="button"
                 onClick={() => window.location.reload()}
-                className="text-sm font-semibold text-slate-900 hover:underline"
+                className="text-sm font-semibold text-lh-teal hover:underline"
               >
                 Request New Code
               </button>
@@ -132,7 +129,7 @@ export default function SuperAdminVerifyOtpPage() {
             <button
               type="button"
               onClick={() => router.replace("/super-admin/login")}
-              className="text-sm text-slate-400 hover:text-slate-900 transition-colors"
+              className="text-sm text-gray-400 hover:text-lh-teal transition-colors"
             >
               Cancel and return
             </button>

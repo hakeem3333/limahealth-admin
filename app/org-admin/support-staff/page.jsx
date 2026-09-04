@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
+import { useDebouncedValue } from "@/lib/useDebouncedValue";
 import SubscriptionGuard from "@/components/SubscriptionGuard";
-import { UserPlus, Search, UserSquare2, Mail, Users, ChevronRight, MoreVertical, AlertCircle } from "lucide-react";
+import { UserPlus, Search, UserSquare2, Mail, Users, ChevronRight, MoreVertical, AlertCircle, UserCheck, UserX } from "lucide-react";
 
 const colorMap = {
   SCHOOL:   { btn: "bg-blue-600 hover:bg-blue-700 shadow-blue-100",   ring: "focus:ring-blue-500/20 focus:border-blue-500",   avatar: "bg-blue-50 text-blue-600 border-blue-100",   count: "bg-blue-50 text-blue-700 border-blue-100",   bar: "bg-blue-500"   },
@@ -19,10 +20,22 @@ export default function SupportStaffPage() {
   const { user, orgType, memberLabel, membersLabel, supportLabel, supportsLabel } = useAuth();
   const c = colorMap[orgType] ?? colorMap.SCHOOL;
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const queryClient = useQueryClient();
 
-  const { data = [], isLoading, error } = useQuery({
-    queryKey: ["support-staff", search],
-    queryFn: async () => (await api.get("/org/support-staff", { params: { search } })).data,
+  const { data = [], isLoading, isPlaceholderData, error } = useQuery({
+    queryKey: ["support-staff", debouncedSearch],
+    queryFn: async () => (await api.get("/org/counselors", { params: { search: debouncedSearch } })).data,
+    placeholderData: keepPreviousData,
+  });
+
+  const setActive = useMutation({
+    mutationFn: ({ id, isActive }) => api.patch(`/org/counselors/${id}/status`, { isActive }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["support-staff"] });
+      setOpenMenuId(null);
+    },
   });
 
   if (isLoading) return <StaffSkeleton />;
@@ -66,7 +79,9 @@ export default function SupportStaffPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+        <div
+          className={`bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -99,7 +114,7 @@ export default function SupportStaffPage() {
                               {staff.name}
                             </Link>
                             <span className="text-xs text-gray-400 font-medium">
-                              Joined {new Date(staff.createdAt || Date.now()).toLocaleDateString()}
+                              Joined {staff.createdAt ? new Date(staff.createdAt).toLocaleDateString() : "—"}
                             </span>
                           </div>
                         </div>
@@ -124,13 +139,40 @@ export default function SupportStaffPage() {
                         <StatusBadge active={staff.isActive} />
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <div className="flex justify-end items-center gap-2">
+                        <div className="flex justify-end items-center gap-2 relative">
                           <Link href={`/org-admin/support-staff/${staff.id}`} className="p-2 text-gray-400 hover:text-current hover:bg-gray-50 rounded-lg transition-all">
                             <ChevronRight className="h-5 w-5" />
                           </Link>
-                          <button className="p-2 text-gray-300 hover:text-gray-600 transition-colors">
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === staff.id ? null : staff.id)}
+                            className="p-2 text-gray-300 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                          >
                             <MoreVertical className="h-5 w-5" />
                           </button>
+
+                          {openMenuId === staff.id && (
+                            <>
+                              <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+                              <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-white rounded-xl border border-gray-100 shadow-xl py-1">
+                                <button
+                                  onClick={() => setActive.mutate({ id: staff.id, isActive: !staff.isActive })}
+                                  disabled={setActive.isPending}
+                                  className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-left transition-colors disabled:opacity-50 ${
+                                    staff.isActive
+                                      ? "text-red-600 hover:bg-red-50"
+                                      : "text-green-600 hover:bg-green-50"
+                                  }`}
+                                >
+                                  {staff.isActive ? (
+                                    <UserX className="h-4 w-4" />
+                                  ) : (
+                                    <UserCheck className="h-4 w-4" />
+                                  )}
+                                  {staff.isActive ? "Deactivate" : "Reactivate"}
+                                </button>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

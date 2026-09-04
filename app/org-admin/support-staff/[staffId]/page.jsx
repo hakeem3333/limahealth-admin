@@ -2,7 +2,8 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import {
   Users,
@@ -15,17 +16,29 @@ import {
   ClipboardList,
   UserMinus,
   UserPlus,
+  X,
+  Search,
 } from "lucide-react";
 
 export default function CounselorProfilePage() {
   const params = useParams();
   const staffId = params.staffId;
+  const queryClient = useQueryClient();
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["counselor-profile", staffId],
     queryFn: async () => {
       const res = await api.get(`/org/counselors/${staffId}`);
       return res.data;
+    },
+  });
+
+  const setActive = useMutation({
+    mutationFn: (isActive) => api.patch(`/org/counselors/${staffId}/status`, { isActive }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["counselor-profile", staffId] });
+      queryClient.invalidateQueries({ queryKey: ["support-staff"] });
     },
   });
 
@@ -43,7 +56,7 @@ export default function CounselorProfilePage() {
           connection.
         </p>
         <Link
-          href="/org-admin/counselors"
+          href="/org-admin/support-staff"
           className="mt-6 text-sm font-bold text-red-900 underline"
         >
           Back to List
@@ -57,7 +70,7 @@ export default function CounselorProfilePage() {
       {/* Breadcrumb & Navigation */}
       <nav className="flex items-center gap-2 text-sm font-bold text-gray-400">
         <Link
-          href="/org-admin/counselors"
+          href="/org-admin/support-staff"
           className="hover:text-blue-600 transition-colors flex items-center gap-1"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -87,13 +100,24 @@ export default function CounselorProfilePage() {
         </div>
 
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 bg-white border border-gray-200 px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-all text-sm">
+          <button
+            onClick={() => setShowAssignModal(true)}
+            className="flex items-center gap-2 bg-white border border-gray-200 px-5 py-2.5 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition-all text-sm"
+          >
             <UserPlus className="h-4 w-4" />
             Assign Students
           </button>
-          <button className="flex items-center gap-2 bg-red-50 text-red-600 border border-red-100 px-5 py-2.5 rounded-xl font-bold hover:bg-red-100 transition-all text-sm">
+          <button
+            onClick={() => setActive.mutate(!data.isActive)}
+            disabled={setActive.isPending}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all text-sm disabled:opacity-50 ${
+              data.isActive
+                ? "bg-red-50 text-red-600 border border-red-100 hover:bg-red-100"
+                : "bg-green-50 text-green-600 border border-green-100 hover:bg-green-100"
+            }`}
+          >
             <UserMinus className="h-4 w-4" />
-            Deactivate
+            {data.isActive ? "Deactivate" : "Reactivate"}
           </button>
         </div>
       </div>
@@ -172,7 +196,7 @@ export default function CounselorProfilePage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Link
-                          href={`/org-admin/students/${student.id}`}
+                          href={`/org-admin/members/${student.id}`}
                           className="p-2 text-gray-400 hover:text-blue-600 transition-colors inline-block"
                         >
                           <ExternalLink className="h-4 w-4" />
@@ -214,7 +238,7 @@ export default function CounselorProfilePage() {
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 leading-relaxed italic">
-                    "{i.note}"
+                    &quot;{i.note}&quot;
                   </p>
                 </div>
               ))}
@@ -225,11 +249,129 @@ export default function CounselorProfilePage() {
           )}
         </Section>
       </div>
+
+      {showAssignModal && (
+        <AssignStudentsModal
+          counselorId={staffId}
+          currentStudentIds={data.students.map((s) => s.id)}
+          onClose={() => setShowAssignModal(false)}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["counselor-profile", staffId] });
+            setShowAssignModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 /* ----------------------------- UI Components ----------------------------- */
+
+function AssignStudentsModal({ counselorId, currentStudentIds, onClose, onSaved }) {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(() => new Set(currentStudentIds));
+
+  const { data: members = [], isLoading } = useQuery({
+    queryKey: ["members-for-assign"],
+    queryFn: async () => (await api.get("/org/members")).data,
+  });
+
+  const assign = useMutation({
+    mutationFn: (studentIds) =>
+      api.post(`/org/counselors/${counselorId}/assign`, { studentIds }),
+    onSuccess: () => onSaved(),
+  });
+
+  const toggle = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const filtered = members.filter((m) =>
+    (m.name || "").toLowerCase().includes(search.toLowerCase()),
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-3xl border border-gray-100 shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="text-xl font-black text-gray-900">Assign Students</h2>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-all"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6 pb-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search students..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-6 space-y-1">
+          {isLoading ? (
+            <p className="text-sm text-gray-400 text-center py-8">Loading students…</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">No students found.</p>
+          ) : (
+            filtered.map((m) => (
+              <label
+                key={m.id}
+                className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.has(m.id)}
+                  onChange={() => toggle(m.id)}
+                  className="h-4 w-4 rounded accent-blue-600"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">{m.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{m.email}</p>
+                </div>
+              </label>
+            ))
+          )}
+        </div>
+
+        <div className="p-6 pt-4 border-t border-gray-100 flex items-center justify-between gap-3">
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            {selected.size} selected
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl font-bold text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => assign.mutate([...selected])}
+              disabled={assign.isPending}
+              className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm disabled:opacity-50"
+            >
+              {assign.isPending ? "Saving…" : "Save Caseload"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Section({ title, icon, children }) {
   return (

@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Settings,
   History,
+  AlertTriangle,
 } from "lucide-react";
 
 export default function StudentProfilePage() {
@@ -24,13 +25,13 @@ export default function StudentProfilePage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["student-profile", memberId],
     queryFn: async () => {
-      const res = await api.get(`/org/students/${memberId}`);
+      const res = await api.get(`/org/members/${memberId}`);
       return res.data;
     },
   });
 
   if (isLoading) return <ProfileSkeleton />;
-  if (error || !data) return <ErrorState />; // Create a small helper for this
+  if (error || !data) return <ErrorState />;
 
   // Fallback objects to prevent "cannot read property of undefined"
   const wearable = data.wearable || { connected: false, lastSync: null };
@@ -64,11 +65,10 @@ export default function StudentProfilePage() {
         </div>
 
         <div className="flex gap-3">
-          <ActionButton href={`/org-admin/students/${memberId}/edit`}>
+          <ActionButton href={`/org-admin/members/${memberId}/edit`}>
             <Settings className="h-4 w-4" />
             Edit Profile
           </ActionButton>
-          {/* Ensure this path matches your sidebar/router exactly */}
           <ActionButton href="/org-admin/wearables" variant="primary">
             <Watch className="h-4 w-4" />
             Sync Device
@@ -237,6 +237,26 @@ function ActionButton({ href, children, variant = "secondary" }) {
     >
       {children}
     </Link>
+  );
+}
+
+function ErrorState() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-gray-100 bg-white p-16 text-center shadow-sm">
+      <div className="h-12 w-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
+        <AlertTriangle className="h-6 w-6" />
+      </div>
+      <p className="text-lg font-black text-gray-900">Couldn&apos;t load this member</p>
+      <p className="text-sm text-gray-500 max-w-xs">
+        They may no longer be enrolled, or something went wrong loading their profile.
+      </p>
+      <Link
+        href="/org-admin/members"
+        className="mt-2 text-sm font-bold text-blue-600 hover:underline"
+      >
+        Back to Members
+      </Link>
+    </div>
   );
 }
 

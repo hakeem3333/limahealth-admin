@@ -534,13 +534,6 @@ export default function SignupPage() {
                     Continue to Sign In
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
-                  <button
-                    onClick={() => setIsSuccess(false)}
-                    className="w-full py-3 text-xs font-black uppercase tracking-widest transition-colors"
-                    style={{ color: P.textMuted }}
-                  >
-                    Wrong email? Go back
-                  </button>
                 </div>
               </div>
             )}

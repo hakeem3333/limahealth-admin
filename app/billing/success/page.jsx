@@ -192,11 +192,11 @@ export default function SuccessPage() {
         // ✅ refreshUser returns the updated user — don't rely on the stale closure
         const updatedUser = await refreshUser(true);
 
-        if (updatedUser?.school?.status === "ACTIVE") {
+        if (updatedUser?.org?.status === "ACTIVE") {
           clearInterval(interval);
           setIsSyncing(false); // ✅ triggers UI update to show success state
           setTimeout(() => {
-            router.push("/school-admin/dashboard");
+            router.push("/org-admin/dashboard");
           }, 2000);
           return;
         }
@@ -235,14 +235,14 @@ export default function SuccessPage() {
 
         <p className="text-gray-600 mb-8">
           {isSyncing
-            ? "We are updating your school's access levels. Please wait a moment."
+            ? "We are updating your organisation's access levels. Please wait a moment."
             : `Thank you for subscribing! ${
-                user?.school?.name || "Your school"
+                user?.org?.name || "Your organisation"
               } is now fully activated.`}
         </p>
 
         <Link
-          href="/school-admin/dashboard"
+          href="/org-admin/dashboard"
           className={`w-full flex items-center justify-center py-4 rounded-xl font-bold transition-all group ${
             isSyncing
               ? "bg-gray-100 text-gray-400 cursor-not-allowed"

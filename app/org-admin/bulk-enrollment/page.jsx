@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/axios";
 import {
   CloudUpload,
@@ -10,14 +11,21 @@ import {
   Loader2,
   FileSpreadsheet,
   XCircle,
-} from "lucide-react"; // Consistent with other pages
+  Download,
+  ArrowLeft,
+} from "lucide-react";
 
 export default function BulkEnrollPage() {
+  const { memberLabel, supportLabel } = useAuth();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+
+  const memberWord = (memberLabel || "Student").toUpperCase();
+  const supportWord = (supportLabel || "Counselor").toUpperCase();
 
   const allowedExtensions = [".csv", ".xlsx", ".xls"];
   const allowedMimeTypes = [
@@ -42,6 +50,7 @@ export default function BulkEnrollPage() {
 
     setFile(selectedFile);
     setError("");
+    setPreview(null);
     setResult(null);
   };
 
@@ -66,8 +75,30 @@ export default function BulkEnrollPage() {
     validateAndSetFile(droppedFile);
   };
 
-  const handleUpload = async (e) => {
+  const handlePreview = async (e) => {
     e.preventDefault();
+    if (!file) return;
+
+    setLoading(true);
+    setError("");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("dryRun", "true");
+
+    try {
+      const { data } = await api.post("/auth/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setPreview(data);
+    } catch (err) {
+      setError(err?.response?.data?.message || "Failed to read file.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirm = async () => {
     if (!file) return;
 
     setLoading(true);
@@ -81,11 +112,19 @@ export default function BulkEnrollPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setResult(data);
+      setPreview(null);
     } catch (err) {
       setError(err?.response?.data?.message || "Failed to process file.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const startOver = () => {
+    setFile(null);
+    setPreview(null);
+    setResult(null);
+    setError("");
   };
 
   return (
@@ -95,8 +134,8 @@ export default function BulkEnrollPage() {
           Bulk Enrollment
         </h1>
         <p className="text-gray-500 mt-2 text-lg">
-          Onboard your entire school community in seconds using a CSV or Excel
-          template.
+          Onboard your entire {memberLabel ? memberLabel.toLowerCase() : "member"}{" "}
+          community in seconds using a CSV or Excel template.
         </p>
       </div>
 
@@ -105,33 +144,42 @@ export default function BulkEnrollPage() {
         <div className="h-12 w-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
           <FileSpreadsheet className="h-6 w-6 text-blue-600" />
         </div>
-        <div>
+        <div className="flex-1">
           <h3 className="font-bold text-blue-900">Formatting Instructions</h3>
           <p className="text-sm text-blue-800/80 mt-1 leading-relaxed">
             Your file must include headers for:{" "}
             <code className="bg-blue-200/50 px-1.5 py-0.5 rounded font-mono text-blue-900">
               firstName
             </code>
-            ,
+            ,{" "}
             <code className="bg-blue-200/50 px-1.5 py-0.5 rounded font-mono text-blue-900">
               lastName
             </code>
-            ,
+            ,{" "}
             <code className="bg-blue-200/50 px-1.5 py-0.5 rounded font-mono text-blue-900">
               email
             </code>
-            , and
+            , and{" "}
             <code className="bg-blue-200/50 px-1.5 py-0.5 rounded font-mono text-blue-900">
               role
             </code>{" "}
-            (STUDENT, TEACHER, or COUNSELOR).
+            ({memberWord} or {supportWord}).
           </p>
+          <a
+            href={`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/upload/template`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:text-blue-900 bg-white px-4 py-2 rounded-lg border border-blue-200 shadow-sm transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Download Template
+          </a>
         </div>
       </div>
 
-      {!result ? (
+      {!result && !preview && (
         <form
-          onSubmit={handleUpload}
+          onSubmit={handlePreview}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -177,7 +225,10 @@ export default function BulkEnrollPage() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => setFile(null)}
+                  onClick={() => {
+                    setFile(null);
+                    setPreview(null);
+                  }}
                   className="text-green-700/50 hover:text-red-500"
                 >
                   <XCircle className="h-4 w-4" />
@@ -201,20 +252,107 @@ export default function BulkEnrollPage() {
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              "Process Enrollment"
+              "Preview Enrollment"
             )}
           </button>
         </form>
-      ) : (
+      )}
+
+      {preview && !result && (
+        /* Preview / Confirm Section */
+        <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-xl animate-in zoom-in-95 duration-300">
+          <div className="p-8 border-b border-gray-50 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Review Before Enrolling
+            </h2>
+            <button
+              onClick={startOver}
+              className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-700 bg-gray-50 px-4 py-2 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Choose Different File
+            </button>
+          </div>
+
+          <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8 text-center bg-gray-50/30">
+            <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+              <p className="text-5xl font-black text-gray-900">
+                {preview.wouldCreateCount}
+              </p>
+              <p className="text-sm text-gray-500 uppercase tracking-widest font-bold mt-2">
+                Ready to Enroll
+              </p>
+            </div>
+            <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100">
+              <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <p className="text-5xl font-black text-gray-900">
+                {preview.wouldFailCount}
+              </p>
+              <p className="text-sm text-gray-500 uppercase tracking-widest font-bold mt-2">
+                Would Fail
+              </p>
+            </div>
+          </div>
+
+          {preview.sampleInvalid?.length > 0 && (
+            <div className="px-8 pb-2">
+              <h3 className="text-sm font-bold text-red-700 mb-3">
+                Rows that need fixing (showing first {preview.sampleInvalid.length})
+              </h3>
+              <div className="overflow-x-auto rounded-xl border border-red-100">
+                <table className="w-full text-sm">
+                  <thead className="bg-red-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left font-semibold text-red-800">Email</th>
+                      <th className="px-4 py-2 text-left font-semibold text-red-800">Role</th>
+                      <th className="px-4 py-2 text-left font-semibold text-red-800">Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {preview.sampleInvalid.map((row, i) => (
+                      <tr key={i} className="border-t border-red-50">
+                        <td className="px-4 py-2">{row.email || "—"}</td>
+                        <td className="px-4 py-2">{row.role || "—"}</td>
+                        <td className="px-4 py-2 text-red-600">{row.error}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mx-8 mb-2 flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-xl border border-red-100">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
+          )}
+
+          <div className="p-8 pt-4 flex justify-end">
+            <button
+              onClick={handleConfirm}
+              disabled={loading || preview.wouldCreateCount === 0}
+              className="flex items-center justify-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-xl font-bold disabled:opacity-30 hover:bg-black transition shadow-xl"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                `Confirm & Enroll ${preview.wouldCreateCount}`
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {result && (
         /* Result Summary Section */
         <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-xl animate-in zoom-in-95 duration-300">
           <div className="p-8 border-b border-gray-50 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">Upload Summary</h2>
             <button
-              onClick={() => {
-                setResult(null);
-                setFile(null);
-              }}
+              onClick={startOver}
               className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-4 py-2 rounded-lg transition-colors"
             >
               Start New Upload

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/axios";
 import { getOrgTheme, DEFAULT_THEME } from "@/lib/orgTheme";
+import { isPublicPath } from "@/lib/publicPaths";
 
 const AuthContext = createContext(undefined);
 
@@ -13,6 +14,17 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   const refreshUser = useCallback(async (force = false) => {
+    // The super-admin portal has its own session (super_access_token /
+    // super_refresh_token) and its own middleware-based route protection —
+    // it never reads `user` from this context. Calling /auth/me here would
+    // always 401 (no org-admin access_token cookie exists in that session)
+    // and spuriously trigger the super-admin refresh-token rotation on every
+    // page load, which is both wasted work and a source of multi-tab races.
+    if (window.location.pathname.startsWith("/super-admin")) {
+      setLoading(false);
+      return null;
+    }
+
     try {
       setLoading(true);
 
@@ -56,7 +68,9 @@ export function AuthProvider({ children }) {
       }
       setUser(null);
       sessionStorage.removeItem("auth_user");
-      router.push("/login");
+      if (!isPublicPath(window.location.pathname)) {
+        router.push("/login");
+      }
     } finally {
       setLoading(false);
     }

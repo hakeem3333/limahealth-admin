@@ -2,7 +2,10 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { api } from "@/lib/axios";
+import Button from "@/components/super-admin/ui/Button";
+import { Card } from "@/components/super-admin/ui/Card";
 
 export default function SuperAdminSettingsPage() {
   const queryClient = useQueryClient();
@@ -32,13 +35,14 @@ export default function SuperAdminSettingsPage() {
     if (data) setForm(data);
   }, [data]);
 
-  if (isLoading || !form)
-    return (
-      <p className="p-8 text-center text-muted-foreground">Loading settings…</p>
-    );
+  if (isLoading || !form) {
+    return <div className="h-96 max-w-3xl bg-gray-200 rounded-2xl animate-pulse" />;
+  }
   if (error)
     return (
-      <p className="p-8 text-center text-red-500">Failed to load settings.</p>
+      <div className="rounded-2xl bg-white shadow-card p-12 text-center max-w-3xl">
+        <p className="text-red-500 font-semibold">Failed to load settings.</p>
+      </div>
     );
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -51,17 +55,31 @@ export default function SuperAdminSettingsPage() {
   return (
     <div className="max-w-3xl space-y-8">
       <header>
-        <h1 className="text-2xl font-bold">Platform Settings</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal mb-2">
+          Core Infrastructure
+        </p>
+        <h1 className="font-display text-3xl font-bold text-lh-navy">
+          Platform Settings
+        </h1>
+        <p className="text-sm text-gray-500 mt-1">
           Global configuration for LimaHealth
         </p>
       </header>
 
-      {successMsg && <p className="text-green-600 font-medium">{successMsg}</p>}
-      {errorMsg && <p className="text-red-600 font-medium">{errorMsg}</p>}
+      {successMsg && (
+        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium">
+          <CheckCircle2 className="h-4 w-4" />
+          {successMsg}
+        </div>
+      )}
+      {errorMsg && (
+        <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">
+          <AlertTriangle className="h-4 w-4" />
+          {errorMsg}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Governance */}
         <Section title="Platform Governance">
           <Toggle
             label="Allow New School Signup"
@@ -77,15 +95,10 @@ export default function SuperAdminSettingsPage() {
             label="Default School Status"
             value={form.defaultSchoolStatus}
             onChange={(v) => update("defaultSchoolStatus", v)}
-            options={[
-              "PENDING_EMAIL_VERIFICATION",
-              "PENDING_ACTIVATION",
-              "ACTIVE",
-            ]}
+            options={["PENDING_EMAIL_VERIFICATION", "PENDING_ACTIVATION", "ACTIVE"]}
           />
         </Section>
 
-        {/* Security */}
         <Section title="Security & Compliance">
           <NumberField
             label="Admin OTP Expiry (minutes)"
@@ -101,7 +114,6 @@ export default function SuperAdminSettingsPage() {
           />
         </Section>
 
-        {/* Features */}
         <Section title="Platform Features">
           <Toggle
             label="Enable Wearable Integrations"
@@ -115,7 +127,6 @@ export default function SuperAdminSettingsPage() {
           />
         </Section>
 
-        {/* Data */}
         <Section title="Data & Privacy">
           <NumberField
             label="Data Retention (months)"
@@ -131,13 +142,9 @@ export default function SuperAdminSettingsPage() {
           />
         </Section>
 
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="rounded-md bg-black px-6 py-2 text-white disabled:opacity-50"
-        >
+        <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Saving…" : "Save Settings"}
-        </button>
+        </Button>
       </form>
     </div>
   );
@@ -147,21 +154,22 @@ export default function SuperAdminSettingsPage() {
 
 function Section({ title, children }) {
   return (
-    <div className="rounded-xl border p-5 space-y-4 bg-white dark:bg-gray-900">
-      <h2 className="font-semibold">{title}</h2>
+    <Card className="space-y-4 p-6">
+      <h2 className="font-display font-bold text-lh-navy">{title}</h2>
       {children}
-    </div>
+    </Card>
   );
 }
 
 function Toggle({ label, checked, onChange }) {
   return (
     <label className="flex justify-between items-center text-sm">
-      <span>{label}</span>
+      <span className="text-gray-700">{label}</span>
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
+        className="accent-lh-teal h-4 w-4"
       />
     </label>
   );
@@ -170,14 +178,14 @@ function Toggle({ label, checked, onChange }) {
 function NumberField({ label, value, onChange, min, max }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span>{label}</span>
+      <span className="text-gray-700">{label}</span>
       <input
         type="number"
         min={min}
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="border rounded-md px-3 py-2"
+        className="border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-lh-teal outline-none"
       />
     </label>
   );
@@ -186,11 +194,11 @@ function NumberField({ label, value, onChange, min, max }) {
 function Select({ label, value, options, onChange }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span>{label}</span>
+      <span className="text-gray-700">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border rounded-md px-3 py-2"
+        className="border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-lh-teal outline-none"
       >
         {options.map((opt) => (
           <option key={opt} value={opt}>

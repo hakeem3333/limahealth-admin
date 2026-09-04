@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
-/* ─── LimaHealth Design Tokens ─────────────────────────────────────────── */
+/* ─── LimaHealth Design Tokens — "Teal Trust" ──────────────────────────── */
 :root {
   /* Super-admin / web brand */
-  --lh-navy:          #0D3B7A;
-  --lh-navy-light:    #E8EEF8;
-  --lh-teal:          #0CAF87;
-  --lh-teal-light:    #EBF9F5;
-  --lh-red:           #E63946;
+  --lh-navy:          #123B39; /* deep clinical teal (primary) */
+  --lh-navy-light:    #E4EDEC;
+  --lh-teal:          #1F6F6B; /* core teal (hover / active) */
+  --lh-teal-light:    #E3F0EE;
+  --lh-accent:        #D98C4A; /* warm terracotta (secondary accent) */
+  --lh-accent-light:  #FBEADA;
+  --lh-red:           #B0433D;
   --lh-gray-mid:      #5F6B7A;
-  --lh-page-bg:       #F5F7FA;
+  --lh-page-bg:       #FBF8F2; /* warm sand/cream */
 
   /* Purple accent (counselor / mental-health features) */
   --lh-purple:        #6C5CE7;
@@ -28,13 +30,25 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+
+  --color-lh-navy: var(--lh-navy);
+  --color-lh-navy-light: var(--lh-navy-light);
+  --color-lh-teal: var(--lh-teal);
+  --color-lh-teal-light: var(--lh-teal-light);
+  --color-lh-accent: var(--lh-accent);
+  --color-lh-accent-light: var(--lh-accent-light);
+  --color-lh-red: var(--lh-red);
+  --color-lh-page-bg: var(--lh-page-bg);
+
+  --shadow-card: 0 10px 30px rgba(18, 59, 57, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
-    --lh-page-bg: #0f172a;
+    --lh-page-bg: #0f1715;
   }
 }
 
@@ -48,3 +62,11 @@ body {
 .custom-scrollbar::-webkit-scrollbar        { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track  { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.12); border-radius: 99px; }
+
+/* Super-admin page wash — subtle teal/terracotta radial gradient over the cream base */
+.lh-page-wash {
+  background-color: var(--lh-page-bg);
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(31, 111, 107, 0.08), transparent 32%),
+    radial-gradient(circle at 85% 0%, rgba(217, 140, 74, 0.07), transparent 35%);
+}
