@@ -56,13 +56,13 @@ export default function AuditLogsPage() {
   ------------------------------ */
 
   if (isLoading) {
-    return <p className="p-8 text-center">Loading audit logs...</p>;
+    return <p className="p-8 text-center text-gray-500 dark:text-gray-400">Loading audit logs...</p>;
   }
 
   if (error) {
     console.error("Audit logs fetch failed:", error);
     return (
-      <p className="p-8 text-center text-red-500">Failed to load audit logs.</p>
+      <p className="p-8 text-center text-red-500 dark:text-red-400">Failed to load audit logs.</p>
     );
   }
 
@@ -74,8 +74,8 @@ export default function AuditLogsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Audit Logs</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-2xl font-bold text-lh-navy dark:text-white">Audit Logs</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Security & compliance activity across the platform
         </p>
       </div>
@@ -89,7 +89,7 @@ export default function AuditLogsPage() {
             setPage(1);
             setAction(e.target.value);
           }}
-          className="border rounded-md px-3 py-2 text-sm"
+          className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 dim:bg-white dark:text-white dark:placeholder:text-gray-500 rounded-md px-3 py-2 text-sm"
         />
 
         <select
@@ -98,7 +98,7 @@ export default function AuditLogsPage() {
             setPage(1);
             setActorRole(e.target.value);
           }}
-          className="border rounded-md px-3 py-2 text-sm"
+          className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 dim:bg-white dark:text-white dark:placeholder:text-gray-500 rounded-md px-3 py-2 text-sm"
         >
           <option value="">All Roles</option>
           <option value="SUPER_ADMIN">Super Admin</option>
@@ -107,9 +107,9 @@ export default function AuditLogsPage() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border bg-white dark:bg-gray-900">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead className="bg-gray-50 dark:bg-gray-800/60">
             <tr>
               <Th>Actor</Th>
               <Th>Role</Th>
@@ -123,14 +123,14 @@ export default function AuditLogsPage() {
           <tbody>
             {logs.length > 0 ? (
               logs.map((log) => (
-                <tr key={log.id} className="border-t">
+                <tr key={log.id} className="border-t border-gray-100 dark:border-gray-800">
                   <Td>{log.actorName || "N/A"}</Td>
                   <Td>{log.actorRole || "N/A"}</Td>
                   <Td className="font-mono text-xs">{log.action || "N/A"}</Td>
                   <Td>
                     {log.targetType || "N/A"}
                     {log.targetId && (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {" "}
                         ({log.targetId})
                       </span>
@@ -148,7 +148,7 @@ export default function AuditLogsPage() {
               <tr>
                 <Td
                   colSpan={6}
-                  className="text-center py-10 text-muted-foreground"
+                  className="text-center py-10 text-gray-500 dark:text-gray-400"
                 >
                   No audit logs found for the selected filters.
                 </Td>
@@ -163,7 +163,7 @@ export default function AuditLogsPage() {
         <button
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}
-          className="border rounded-md px-3 py-1 text-sm disabled:opacity-50"
+          className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 dim:bg-white dark:text-white rounded-md px-3 py-1 text-sm disabled:opacity-50"
         >
           Previous
         </button>
@@ -171,7 +171,7 @@ export default function AuditLogsPage() {
         <button
           onClick={() => setPage((p) => p + 1)}
           disabled={!hasNextPage}
-          className="border rounded-md px-3 py-1 text-sm disabled:opacity-50"
+          className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 dim:bg-white dark:text-white rounded-md px-3 py-1 text-sm disabled:opacity-50"
         >
           Next
         </button>
@@ -186,7 +186,7 @@ export default function AuditLogsPage() {
 
 function Th({ children }) {
   return (
-    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
+    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
       {children}
     </th>
   );

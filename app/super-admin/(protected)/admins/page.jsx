@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { Plus, KeyRound, UserX } from "lucide-react";
+import { Plus, KeyRound, UserX, UserCheck } from "lucide-react";
 import { api } from "@/lib/axios";
 import Button from "@/components/super-admin/ui/Button";
 import Badge from "@/components/super-admin/ui/Badge";
@@ -38,31 +38,31 @@ export default function SuperAdminAdminsPage() {
     onSettled: () => setActiveAdminId(null),
   });
 
-  const deactivateAdmin = useMutation({
-    mutationFn: (adminId) =>
-      api.patch(`/super-admin/admins/${adminId}/deactivate`),
-    onMutate: (adminId) => setActiveAdminId(adminId),
+  const setAdminActive = useMutation({
+    mutationFn: ({ adminId, active }) =>
+      api.patch(`/super-admin/admins/${adminId}/${active ? "activate" : "deactivate"}`),
+    onMutate: ({ adminId }) => setActiveAdminId(adminId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["super-admin-admins"],
       });
     },
     onError: (err) => {
-      console.error("Deactivate admin failed:", err);
-      alert("Failed to deactivate admin");
+      console.error("Update admin status failed:", err);
+      alert("Failed to update admin status");
     },
     onSettled: () => setActiveAdminId(null),
   });
 
   if (isLoading) {
-    return <div className="h-96 bg-gray-200 rounded-2xl animate-pulse" />;
+    return <div className="h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />;
   }
 
   if (error || !data) {
     console.error("Fetch admins error:", error, data);
     return (
-      <div className="rounded-2xl bg-white shadow-card p-12 text-center">
-        <p className="text-red-500 font-semibold">Server connection failed.</p>
+      <div className="rounded-2xl bg-white dark:bg-gray-900 dim:bg-white shadow-card p-12 text-center">
+        <p className="text-red-500 dark:text-red-400 font-semibold">Server connection failed.</p>
         <p className="text-sm text-gray-400 mt-1">
           Unable to fetch administrator list.
         </p>
@@ -70,16 +70,16 @@ export default function SuperAdminAdminsPage() {
     );
   }
 
-  const adminsList = Array.isArray(data) ? data : [];
+  const adminsList = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal mb-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal dark:text-lh-teal-light mb-2">
             System Authority
           </p>
-          <h1 className="font-display text-3xl font-bold text-lh-navy">
+          <h1 className="font-display text-3xl font-bold text-lh-navy dark:text-white">
             Global Admins
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -100,8 +100,8 @@ export default function SuperAdminAdminsPage() {
           adminsList.map((admin) => {
             const isActive = activeAdminId === admin?.id;
             return (
-              <tr key={admin?.id || admin?.email} className="hover:bg-lh-teal-light/40 transition-colors">
-                <Td className="font-semibold text-gray-900">{admin?.name || "N/A"}</Td>
+              <tr key={admin?.id || admin?.email} className="hover:bg-lh-teal-light/40 dark:hover:bg-gray-800/60 transition-colors">
+                <Td className="font-semibold text-gray-900 dark:text-white">{admin?.name || "N/A"}</Td>
                 <Td className="text-gray-500">{admin?.email || "N/A"}</Td>
                 <Td className="text-gray-500">{admin?.orgName || "N/A"}</Td>
                 <Td>
@@ -113,7 +113,7 @@ export default function SuperAdminAdminsPage() {
                 <Td className="text-right space-x-3 whitespace-nowrap">
                   <Link
                     href={`/super-admin/admins/${admin?.id}`}
-                    className="text-lh-teal font-semibold hover:underline"
+                    className="text-lh-teal dark:text-lh-teal-light font-semibold hover:underline"
                   >
                     View
                   </Link>
@@ -125,18 +125,29 @@ export default function SuperAdminAdminsPage() {
                     <KeyRound className="h-3.5 w-3.5" />
                     {isActive ? "..." : "Reset"}
                   </button>
-                  <button
-                    onClick={() => {
-                      if (confirm("Deactivate this admin?")) {
-                        deactivateAdmin.mutate(admin?.id);
-                      }
-                    }}
-                    disabled={isActive}
-                    className="inline-flex items-center gap-1 text-red-600 font-semibold hover:underline disabled:opacity-50"
-                  >
-                    <UserX className="h-3.5 w-3.5" />
-                    {isActive ? "..." : "Deactivate"}
-                  </button>
+                  {admin?.status === "INACTIVE" ? (
+                    <button
+                      onClick={() => setAdminActive.mutate({ adminId: admin?.id, active: true })}
+                      disabled={isActive}
+                      className="inline-flex items-center gap-1 text-emerald-600 font-semibold hover:underline disabled:opacity-50"
+                    >
+                      <UserCheck className="h-3.5 w-3.5" />
+                      {isActive ? "..." : "Reactivate"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (confirm("Deactivate this admin?")) {
+                          setAdminActive.mutate({ adminId: admin?.id, active: false });
+                        }
+                      }}
+                      disabled={isActive}
+                      className="inline-flex items-center gap-1 text-red-600 font-semibold hover:underline disabled:opacity-50"
+                    >
+                      <UserX className="h-3.5 w-3.5" />
+                      {isActive ? "..." : "Deactivate"}
+                    </button>
+                  )}
                 </Td>
               </tr>
             );

@@ -1,9 +1,9 @@
 export default function Table({ headers, children, rightAlignLast = true }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-card">
+    <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white shadow-card">
       <table className="w-full min-w-full text-sm">
         <thead>
-          <tr className="bg-gray-50 text-left text-[11px] uppercase tracking-wide text-gray-400">
+          <tr className="bg-gray-50 dark:bg-gray-800/60 text-left text-[11px] uppercase tracking-wide text-gray-400">
             {headers.map((header, i) => (
               <th
                 key={header}
@@ -14,7 +14,7 @@ export default function Table({ headers, children, rightAlignLast = true }) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">{children}</tbody>
+        <tbody className="divide-y divide-gray-50 dark:divide-gray-800">{children}</tbody>
       </table>
     </div>
   );

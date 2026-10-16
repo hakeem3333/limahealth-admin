@@ -34,13 +34,13 @@ export default function SuperAdminOrganisationsPage() {
   });
 
   if (isLoading) {
-    return <div className="h-96 bg-gray-200 rounded-2xl animate-pulse" />;
+    return <div className="h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />;
   }
 
   if (error || !data) {
     return (
-      <div className="rounded-2xl bg-white shadow-card p-12 text-center">
-        <p className="text-red-500 font-semibold">
+      <div className="rounded-2xl bg-white dark:bg-gray-900 dim:bg-white shadow-card p-12 text-center">
+        <p className="text-red-500 dark:text-red-400 font-semibold">
           Server is currently unreachable.
         </p>
         <p className="text-sm text-gray-400 mt-1">Please try again later.</p>
@@ -60,10 +60,10 @@ export default function SuperAdminOrganisationsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal mb-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal dark:text-lh-teal-light mb-2">
             Platform Inventory
           </p>
-          <h1 className="font-display text-3xl font-bold text-lh-navy">
+          <h1 className="font-display text-3xl font-bold text-lh-navy dark:text-white">
             Organisation Registry
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -86,12 +86,12 @@ export default function SuperAdminOrganisationsPage() {
           placeholder="Search by name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-200 rounded-xl px-4 py-2.5 flex-1 bg-white focus:ring-2 focus:ring-lh-teal outline-none text-sm"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 flex-1 bg-white dark:bg-gray-900 dim:bg-white dark:text-white dark:placeholder:text-gray-500 focus:ring-2 focus:ring-lh-teal outline-none text-sm"
         />
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="border border-gray-200 rounded-xl px-4 py-2.5 bg-white focus:ring-2 focus:ring-lh-teal outline-none text-sm"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 bg-white dark:bg-gray-900 dim:bg-white dark:text-white focus:ring-2 focus:ring-lh-teal outline-none text-sm"
         >
           <option value="ALL">All Types</option>
           {ORG_TYPES.map((t) => (
@@ -103,7 +103,7 @@ export default function SuperAdminOrganisationsPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="border border-gray-200 rounded-xl px-4 py-2.5 bg-white focus:ring-2 focus:ring-lh-teal outline-none text-sm"
+          className="border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 bg-white dark:bg-gray-900 dim:bg-white dark:text-white focus:ring-2 focus:ring-lh-teal outline-none text-sm"
         >
           <option value="ALL">All Statuses</option>
           {ORG_STATUSES.map((s) => (
@@ -117,8 +117,8 @@ export default function SuperAdminOrganisationsPage() {
       <Table headers={["Organisation", "Type", "Email", "Members", "Admins", "Status", "Registered", "Management"]}>
         {orgsList.length > 0 ? (
           orgsList.map((org) => (
-            <tr key={org?.id} className="hover:bg-lh-teal-light/40 transition-colors">
-              <Td className="font-semibold text-gray-900">{org?.name || "N/A"}</Td>
+            <tr key={org?.id} className="hover:bg-lh-teal-light/40 dark:hover:bg-gray-800/60 transition-colors">
+              <Td className="font-semibold text-gray-900 dark:text-white">{org?.name || "N/A"}</Td>
               <Td className="text-gray-500">{org?.orgType || "N/A"}</Td>
               <Td className="text-gray-500">{org?.email || "N/A"}</Td>
               <Td className="text-gray-500">{org?.membersCount ?? 0}</Td>
@@ -132,13 +132,13 @@ export default function SuperAdminOrganisationsPage() {
               <Td className="text-right space-x-3">
                 <Link
                   href={`/super-admin/organisations/${org?.id}`}
-                  className="text-lh-teal font-semibold hover:underline"
+                  className="text-lh-teal dark:text-lh-teal-light font-semibold hover:underline"
                 >
                   Configure
                 </Link>
                 <Link
                   href={`/super-admin/organisations/${org?.id}/admins`}
-                  className="text-lh-teal font-semibold hover:underline"
+                  className="text-lh-teal dark:text-lh-teal-light font-semibold hover:underline"
                 >
                   Admins
                 </Link>

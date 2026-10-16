@@ -34,7 +34,7 @@ export default function OrgAdminDashboard() {
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <span className="text-3xl">{theme?.icon}</span>
-            <h1 className="text-3xl font-black tracking-tight text-gray-900">
+            <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white">
               {orgName || theme?.orgLabel} Dashboard
             </h1>
           </div>
@@ -60,10 +60,10 @@ export default function OrgAdminDashboard() {
         </div>
 
         {/* Recent Alerts */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
-          <div className="px-7 py-5 border-b border-gray-50 flex items-center justify-between">
+        <div className="bg-white dark:bg-gray-900 dim:bg-white rounded-3xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 shadow-xl overflow-hidden">
+          <div className="px-7 py-5 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-black text-gray-900">Recent Risk Alerts</h2>
+              <h2 className="text-lg font-black text-gray-900 dark:text-white">Recent Risk Alerts</h2>
               <p className="text-[11px] text-gray-400 mt-0.5 font-medium uppercase tracking-widest">Latest flagged wellbeing incidents</p>
             </div>
             <Link href="/org-admin/alerts" className={`text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl border ${c.badge} transition-all hover:shadow-sm`}>
@@ -85,13 +85,15 @@ export default function OrgAdminDashboard() {
                     <th className="pb-4 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                   {data.recentAlerts.map((alert) => (
                     <tr key={alert.id} className="group">
-                      <td className="py-4 font-bold text-gray-900">{alert.studentName || alert.memberName}</td>
+                      <td className="py-4 font-bold text-gray-900 dark:text-white">{alert.studentName || alert.memberName}</td>
                       <td className="py-4">
                         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black border ${
-                          alert.riskLevel === "CRITICAL" ? "bg-red-50 text-red-700 border-red-100" : "bg-amber-50 text-amber-700 border-amber-100"
+                          alert.riskLevel === "CRITICAL"
+                            ? "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-100 dark:border-red-500/20"
+                            : "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-500/20"
                         }`}>{alert.riskLevel}</span>
                       </td>
                       <td className="py-4 text-right">
@@ -127,15 +129,15 @@ export default function OrgAdminDashboard() {
 
 function StatCard({ title, value, link, icon, iconBg, danger }) {
   return (
-    <Link href={link} className={`group bg-white rounded-2xl border p-6 transition-all hover:shadow-xl hover:-translate-y-1 ${danger ? "border-red-100" : "border-gray-100"}`}>
+    <Link href={link} className={`group bg-white dark:bg-gray-900 dim:bg-white rounded-2xl border p-6 transition-all hover:shadow-xl hover:-translate-y-1 ${danger ? "border-red-100 dark:border-red-500/20" : "border-gray-100 dark:border-gray-800 dim:border-slate-300/70"}`}>
       <div className="flex items-center justify-between mb-5">
         <div className={`p-2.5 rounded-xl ${iconBg}`}>{icon}</div>
-        <svg className="w-4 h-4 text-gray-200 group-hover:text-current transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-gray-200 dark:text-gray-700 group-hover:text-current transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </div>
       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{title}</p>
-      <p className={`text-4xl font-black mt-1 tracking-tight ${danger ? "text-red-600" : "text-gray-900"}`}>{value ?? 0}</p>
+      <p className={`text-4xl font-black mt-1 tracking-tight ${danger ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-white"}`}>{value ?? 0}</p>
     </Link>
   );
 }
@@ -151,10 +153,10 @@ function QuickAction({ title, icon, href, colorClass }) {
 function DashboardSkeleton() {
   return (
     <div className="space-y-8 animate-pulse">
-      <div className="h-12 w-64 bg-gray-200 rounded-lg" />
-      <div className="grid grid-cols-4 gap-5">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-36 bg-gray-200 rounded-2xl" />)}</div>
-      <div className="h-72 bg-gray-200 rounded-3xl" />
-      <div className="grid grid-cols-3 gap-5">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 bg-gray-200 rounded-2xl" />)}</div>
+      <div className="h-12 w-64 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+      <div className="grid grid-cols-4 gap-5">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-36 bg-gray-200 dark:bg-gray-800 rounded-2xl" />)}</div>
+      <div className="h-72 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
+      <div className="grid grid-cols-3 gap-5">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 bg-gray-200 dark:bg-gray-800 rounded-2xl" />)}</div>
     </div>
   );
 }

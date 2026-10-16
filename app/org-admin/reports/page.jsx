@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 export default function ReportsPage() {
-  const { user } = useAuth();
+  const { user, theme, memberLabel, membersLabel, supportLabel } = useAuth();
   const [range, setRange] = useState("7d");
 
   const { data, isLoading, error } = useQuery({
@@ -32,7 +32,7 @@ export default function ReportsPage() {
 
   if (error) {
     return (
-      <div className="p-8 text-center bg-red-50 rounded-3xl border border-red-100 text-red-600">
+      <div className="p-8 text-center bg-red-50 dark:bg-red-500/10 rounded-3xl border border-red-100 dark:border-red-500/20 text-red-600 dark:text-red-400">
         <AlertTriangle className="mx-auto h-12 w-12 mb-4 opacity-50" />
         <p className="font-bold">Failed to generate reports.</p>
         <button
@@ -50,9 +50,9 @@ export default function ReportsPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
             <BarChart3 className="text-blue-600 h-8 w-8" />
-            School Analytics
+            {theme.orgLabel} Analytics
           </h1>
           <p className="text-gray-500 mt-1 font-medium">
             Aggregated wellbeing trends and staff performance metrics.
@@ -60,7 +60,7 @@ export default function ReportsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all">
+          <button className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
             <Download className="h-4 w-4" />
             Export PDF
           </button>
@@ -72,7 +72,7 @@ export default function ReportsPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total Students"
+            title={`Total ${membersLabel}`}
             icon={<Users className="text-blue-600" />}
           >
             {data.studentsCount}
@@ -107,62 +107,72 @@ export default function ReportsPage() {
               level="LOW"
               value={data.riskDistribution.LOW}
               total={data.studentsCount}
+              population={memberLabel.toLowerCase()}
               color="bg-green-500"
             />
             <RiskMetric
               level="MEDIUM"
               value={data.riskDistribution.MEDIUM}
               total={data.studentsCount}
+              population={memberLabel.toLowerCase()}
               color="bg-amber-500"
             />
             <RiskMetric
               level="HIGH"
               value={data.riskDistribution.HIGH}
               total={data.studentsCount}
+              population={memberLabel.toLowerCase()}
               color="bg-red-500"
             />
           </div>
         </Section>
 
         {/* Counselor Activity Performance */}
-        <Section title="Counselor Caseload & Activity">
+        <Section title={`${supportLabel} Caseload & Activity`}>
           <div className="overflow-x-auto mt-4">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-gray-100">
-                  <TableHead>Counselor</TableHead>
-                  <TableHead>Active Students</TableHead>
+                <tr className="border-b border-gray-100 dark:border-gray-800">
+                  <TableHead>{supportLabel}</TableHead>
+                  <TableHead>Caseload</TableHead>
+                  <TableHead>{membersLabel} Supported</TableHead>
                   <TableHead>Alerts Resolved</TableHead>
                   <TableHead>Total Interventions</TableHead>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                 {data.counselorActivity.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       className="p-12 text-center text-gray-400 font-medium"
                     >
-                      No counselor data available for this range.
+                      No {supportLabel.toLowerCase()} data available for this range.
                     </td>
                   </tr>
                 ) : (
                   data.counselorActivity.map((c) => (
                     <tr
                       key={c.id}
-                      className="group hover:bg-gray-50/50 transition-colors"
+                      className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors"
                     >
-                      <TableCell className="font-bold text-gray-900">
+                      <TableCell className="font-bold text-gray-900 dark:text-white">
                         {c.name}
+                        {c.isActive === false && (
+                          <span className="ml-2 text-[10px] font-black uppercase text-gray-400">Inactive</span>
+                        )}
                       </TableCell>
-                      <TableCell className="text-gray-600 font-medium">
+                      <TableCell className="text-gray-600 dark:text-gray-300 font-medium">
+                        {c.caseload ?? "—"}
+                      </TableCell>
+                      <TableCell className="text-gray-600 dark:text-gray-300 font-medium">
                         {c.students}
                       </TableCell>
-                      <TableCell className="text-gray-600 font-medium">
+                      <TableCell className="text-gray-600 dark:text-gray-300 font-medium">
                         {c.alertsHandled}
                       </TableCell>
                       <TableCell>
-                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-black">
+                        <span className="px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-lg text-xs font-black">
                           {c.interventions} ACTIONS
                         </span>
                       </TableCell>
@@ -174,10 +184,10 @@ export default function ReportsPage() {
           </div>
         </Section>
 
-        <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+        <div className="flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
           <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse" />
           <p className="text-xs text-gray-500 font-medium tracking-wide uppercase">
-            Anonymized Data Compliance: Aggregated to protect individual student
+            Anonymized Data Compliance: Aggregated to protect individual {memberLabel.toLowerCase()}
             PHI.
           </p>
         </div>
@@ -197,7 +207,7 @@ function RangeSelector({ value, onChange }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer shadow-sm"
+        className="appearance-none pl-10 pr-10 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-bold text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500/20 outline-none cursor-pointer shadow-sm"
       >
         <option value="7d">Last 7 Days</option>
         <option value="30d">Last 30 Days</option>
@@ -209,10 +219,10 @@ function RangeSelector({ value, onChange }) {
 
 function Section({ title, icon, children }) {
   return (
-    <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-3xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white p-6 shadow-sm">
       <div className="flex items-center gap-3 mb-4">
         {icon}
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h2>
       </div>
       {children}
     </div>
@@ -221,17 +231,17 @@ function Section({ title, icon, children }) {
 
 function StatCard({ title, children, icon }) {
   return (
-    <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm transition-transform hover:scale-[1.02]">
-      <div className="p-3 bg-gray-50 rounded-2xl w-fit mb-4">{icon}</div>
+    <div className="rounded-3xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white p-6 shadow-sm transition-transform hover:scale-[1.02]">
+      <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl w-fit mb-4">{icon}</div>
       <p className="text-xs font-black text-gray-400 uppercase tracking-widest">
         {title}
       </p>
-      <p className="text-3xl font-black text-gray-900 mt-1">{children}</p>
+      <p className="text-3xl font-black text-gray-900 dark:text-white mt-1">{children}</p>
     </div>
   );
 }
 
-function RiskMetric({ level, value, total, color }) {
+function RiskMetric({ level, value, total, population, color }) {
   const percentage = total > 0 ? (value / total) * 100 : 0;
   return (
     <div className="space-y-3">
@@ -239,16 +249,16 @@ function RiskMetric({ level, value, total, color }) {
         <span className="text-xs font-black text-gray-400 tracking-tighter uppercase">
           {level} Risk
         </span>
-        <span className="text-lg font-black text-gray-900">{value}</span>
+        <span className="text-lg font-black text-gray-900 dark:text-white">{value}</span>
       </div>
-      <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
         <div
           className={`h-full ${color} transition-all duration-1000 ease-out`}
           style={{ width: `${percentage}%` }}
         />
       </div>
       <p className="text-[10px] text-gray-400 font-bold">
-        {percentage.toFixed(1)}% of student body
+        {percentage.toFixed(1)}% of {population}s
       </p>
     </div>
   );
@@ -269,14 +279,14 @@ function TableCell({ children, className = "" }) {
 function ReportsSkeleton() {
   return (
     <div className="space-y-8 animate-pulse">
-      <div className="h-10 w-48 bg-gray-200 rounded-lg" />
+      <div className="h-10 w-48 bg-gray-200 dark:bg-gray-800 rounded-lg" />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-32 bg-gray-200 rounded-3xl" />
+          <div key={i} className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
         ))}
       </div>
-      <div className="h-64 bg-gray-200 rounded-3xl" />
-      <div className="h-64 bg-gray-200 rounded-3xl" />
+      <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
+      <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded-3xl" />
     </div>
   );
 }

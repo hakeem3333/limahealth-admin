@@ -73,36 +73,36 @@ const STATUS_META = {
 const TONES = {
   amber: {
     border: "border-lh-accent",
-    bg: "bg-lh-accent-light/60",
-    text: "text-[#8a5525]",
+    bg: "bg-lh-accent-light/60 dark:bg-lh-accent/10",
+    text: "text-[#8a5525] dark:text-lh-accent",
     iconBg: "bg-lh-accent/15",
     iconText: "text-lh-accent",
   },
   emerald: {
     border: "border-emerald-500",
-    bg: "bg-emerald-50",
-    text: "text-emerald-700",
+    bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    text: "text-emerald-700 dark:text-emerald-400",
     iconBg: "bg-emerald-500/15",
     iconText: "text-emerald-600",
   },
   purple: {
     border: "border-purple-500",
-    bg: "bg-purple-50",
-    text: "text-purple-700",
+    bg: "bg-purple-50 dark:bg-purple-500/10",
+    text: "text-purple-700 dark:text-purple-300",
     iconBg: "bg-purple-500/15",
     iconText: "text-purple-600",
   },
   red: {
     border: "border-red-500",
-    bg: "bg-red-50",
-    text: "text-red-700",
+    bg: "bg-red-50 dark:bg-red-500/10",
+    text: "text-red-700 dark:text-red-400",
     iconBg: "bg-red-500/15",
     iconText: "text-red-600",
   },
   orange: {
     border: "border-orange-500",
-    bg: "bg-orange-50",
-    text: "text-orange-700",
+    bg: "bg-orange-50 dark:bg-orange-500/10",
+    text: "text-orange-700 dark:text-orange-400",
     iconBg: "bg-orange-500/15",
     iconText: "text-orange-600",
   },
@@ -165,10 +165,10 @@ export default function OrganisationDetailPage() {
   if (isLoading) {
     return (
       <div className="max-w-5xl space-y-6">
-        <div className="h-44 bg-gray-200 rounded-3xl animate-pulse" />
+        <div className="h-44 bg-gray-200 dark:bg-gray-800 rounded-3xl animate-pulse" />
         <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-96 bg-gray-200 rounded-2xl animate-pulse" />
-          <div className="h-96 bg-gray-200 rounded-2xl animate-pulse" />
+          <div className="lg:col-span-2 h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
+          <div className="h-96 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse" />
         </div>
       </div>
     );
@@ -176,8 +176,8 @@ export default function OrganisationDetailPage() {
 
   if (error)
     return (
-      <div className="rounded-2xl bg-white shadow-card p-12 text-center max-w-2xl">
-        <p className="text-red-500 font-semibold">Failed to load organisation data.</p>
+      <div className="rounded-2xl bg-white dark:bg-gray-900 dim:bg-white shadow-card p-12 text-center max-w-2xl">
+        <p className="text-red-500 dark:text-red-400 font-semibold">Failed to load organisation data.</p>
       </div>
     );
 
@@ -290,7 +290,7 @@ export default function OrganisationDetailPage() {
             </div>
 
             {hasPendingChange && (
-              <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-lh-teal/40 bg-lh-teal-light/40 px-4 py-3 text-xs font-semibold text-lh-teal">
+              <div className="flex items-center gap-2.5 rounded-xl border border-dashed border-lh-teal/40 bg-lh-teal-light/40 dark:bg-lh-teal/10 px-4 py-3 text-xs font-semibold text-lh-teal dark:text-lh-teal-light">
                 <ArrowRight className="h-3.5 w-3.5 shrink-0" />
                 <span>
                   Changing from{" "}
@@ -357,12 +357,12 @@ export default function OrganisationDetailPage() {
 function DetailRow({ icon: Icon, label, value }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="h-9 w-9 rounded-xl bg-lh-teal-light/60 text-lh-teal flex items-center justify-center shrink-0">
+      <div className="h-9 w-9 rounded-xl bg-lh-teal-light/60 dark:bg-lh-teal/20 text-lh-teal dark:text-lh-teal-light flex items-center justify-center shrink-0">
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{label}</p>
-        <p className="text-sm font-semibold text-gray-800 truncate">{value}</p>
+        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{value}</p>
       </div>
     </div>
   );
@@ -382,14 +382,14 @@ function StatusOption({ selected, isCurrent, value, meta, onClick }) {
         selected
           ? `${tone.border} ${tone.bg} shadow-sm ${pending ? "border-dashed" : ""}`
           : isCurrent
-          ? `${tone.border} bg-white`
-          : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50/60"
+          ? `${tone.border} bg-white dark:bg-gray-900 dim:bg-white`
+          : "border-gray-100 dark:border-gray-800 dim:border-slate-200 bg-white dark:bg-gray-900 dim:bg-white hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50/60 dark:hover:bg-gray-800/60"
       }`}
     >
       <div className="flex items-start gap-3">
         <div
           className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-            highlighted ? `${tone.iconBg} ${tone.iconText}` : "bg-gray-100 text-gray-400"
+            highlighted ? `${tone.iconBg} ${tone.iconText}` : "bg-gray-100 dark:bg-gray-800 text-gray-400"
           }`}
         >
           <Icon className="h-4.5 w-4.5" />
@@ -397,7 +397,7 @@ function StatusOption({ selected, isCurrent, value, meta, onClick }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className={`text-xs font-bold ${highlighted ? tone.text : "text-gray-700"}`}>
+              <span className={`text-xs font-bold ${highlighted ? tone.text : "text-gray-700 dark:text-gray-200"}`}>
                 {meta.label}
               </span>
               {isCurrent && (
@@ -430,7 +430,7 @@ function Field({ label, value, onChange, disabled = false, icon: Icon, hint }) {
           value={value}
           disabled={disabled}
           onChange={(e) => onChange?.(e.target.value)}
-          className={`w-full border border-gray-200 rounded-xl py-2.5 focus:ring-2 focus:ring-lh-teal focus:border-lh-teal outline-none disabled:bg-gray-50 disabled:text-gray-500 text-sm transition-all ${
+          className={`w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dim:bg-white dark:text-white rounded-xl py-2.5 focus:ring-2 focus:ring-lh-teal focus:border-lh-teal outline-none disabled:bg-gray-50 dark:disabled:bg-gray-800/50 disabled:text-gray-500 text-sm transition-all ${
             Icon ? "pl-10" : "pl-4"
           } ${disabled ? "pr-10" : "pr-4"}`}
         />

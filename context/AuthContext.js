@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import { getOrgTheme, DEFAULT_THEME } from "@/lib/orgTheme";
 import { isPublicPath } from "@/lib/publicPaths";
@@ -12,6 +13,7 @@ export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const refreshUser = useCallback(async (force = false) => {
     // The super-admin portal has its own session (super_access_token /
@@ -63,7 +65,11 @@ export function AuthProvider({ children }) {
         const userData = err.response.data.user;
         setUser(userData);
         sessionStorage.setItem("auth_user", JSON.stringify(userData));
-        router.push("/billing");
+        // Don't bounce /billing/success back to /billing — it's polling /auth/me
+        // (which stays 402 until the Stripe webhook flips the org to ACTIVE).
+        if (!window.location.pathname.startsWith("/billing")) {
+          router.push("/billing");
+        }
         return userData;
       }
       setUser(null);
@@ -76,11 +82,20 @@ export function AuthProvider({ children }) {
     }
   }, [router]);
 
+  // A new sign-in in the same tab must never inherit the previous admin's
+  // cached profile or query data (org name, theme, member lists, …).
+  const startSession = useCallback(async () => {
+    sessionStorage.removeItem("auth_user");
+    queryClient.clear();
+    return refreshUser(true);
+  }, [queryClient, refreshUser]);
+
   const logout = async () => {
     try { await api.post("/auth/logout"); } catch {}
     finally {
       setUser(null);
       sessionStorage.removeItem("auth_user");
+      queryClient.clear();
       router.push("/login");
     }
   };
@@ -107,6 +122,7 @@ export function AuthProvider({ children }) {
       supportLabel:  theme.supportLabel,
       supportsLabel: theme.supportsLabel,
       refreshUser,
+      startSession,
       logout,
     }}>
       {children}

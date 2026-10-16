@@ -16,6 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { playfairDisplay } from "@/lib/fonts";
 import { api } from "@/lib/axios";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const navItems = [
   { label: "Control Center", href: "/super-admin/dashboard", icon: HomeIcon },
@@ -84,6 +85,10 @@ export default function SuperAdminLayout({ children }) {
               Core Engine Online
             </span>
           </div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Theme</span>
+            <ThemeToggle compact surface="onDark" accentColor="#D98C4A" />
+          </div>
           <button
             onClick={handleLogout}
             className="flex items-center w-full gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-red-500/10 text-white/70 hover:text-red-300 transition-all group border border-white/5"
@@ -99,16 +104,16 @@ export default function SuperAdminLayout({ children }) {
       {/* Main content wrapper */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="sticky top-0 z-10 flex items-center justify-between h-20 px-8 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <header className="sticky top-0 z-10 flex items-center justify-between h-20 px-8 bg-white/80 dark:bg-gray-900/80 dim:bg-[#EDF0F4]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-6 flex-1">
             <button
-              className="md:hidden p-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-lh-teal-light hover:text-lh-teal transition"
+              className="md:hidden p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-lh-teal-light hover:text-lh-teal transition"
               onClick={() => setSidebarOpen(true)}
             >
               <Bars3Icon className="h-6 w-6" />
             </button>
 
-            <h2 className="font-display hidden lg:block text-xl font-bold text-lh-navy">
+            <h2 className="font-display hidden lg:block text-xl font-bold text-lh-navy dark:text-white">
               {activeItem?.label ?? "LimaHQ"}
             </h2>
 
@@ -118,14 +123,14 @@ export default function SuperAdminLayout({ children }) {
               <input
                 type="text"
                 placeholder="Search organisations, IDs, or logs..."
-                className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-gray-50 border-none focus:ring-2 focus:ring-lh-teal/30 text-sm font-medium transition-all"
+                className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 border-none focus:ring-2 focus:ring-lh-teal/30 text-sm font-medium transition-all"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4 pl-4">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-gray-900">Platform Director</p>
+              <p className="text-sm font-bold text-gray-900 dark:text-white">Platform Director</p>
               <p className="text-[10px] font-bold text-lh-teal uppercase tracking-widest">
                 Global Auth Level 4
               </p>

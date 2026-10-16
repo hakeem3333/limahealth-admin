@@ -47,14 +47,14 @@ export default function OrganisationAdminsPage() {
   });
 
   if (isLoading) {
-    return <div className="h-72 bg-gray-200 rounded-2xl animate-pulse max-w-2xl" />;
+    return <div className="h-72 bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse max-w-2xl" />;
   }
 
   if (error) {
     console.error("Failed to fetch organisation admins:", error);
     return (
-      <div className="rounded-2xl bg-white shadow-card p-12 text-center max-w-2xl">
-        <p className="text-red-500 font-semibold">Failed to load admins.</p>
+      <div className="rounded-2xl bg-white dark:bg-gray-900 dim:bg-white shadow-card p-12 text-center max-w-2xl">
+        <p className="text-red-500 dark:text-red-400 font-semibold">Failed to load admins.</p>
       </div>
     );
   }
@@ -69,7 +69,7 @@ export default function OrganisationAdminsPage() {
         Back to Organisation
       </button>
 
-      <h1 className="font-display text-2xl font-bold text-lh-navy">Organisation Admins</h1>
+      <h1 className="font-display text-2xl font-bold text-lh-navy dark:text-white">Organisation Admins</h1>
 
       <Card className="space-y-6">
         <div className="flex gap-2">
@@ -77,7 +77,7 @@ export default function OrganisationAdminsPage() {
             placeholder="Admin ID"
             value={adminId}
             onChange={(e) => setAdminId(e.target.value)}
-            className="border border-gray-200 rounded-xl px-4 py-2.5 flex-1 focus:ring-2 focus:ring-lh-teal outline-none text-sm"
+            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dim:bg-white dark:text-white dark:placeholder:text-gray-500 rounded-xl px-4 py-2.5 flex-1 focus:ring-2 focus:ring-lh-teal outline-none text-sm"
           />
           <Button
             onClick={() => assignAdmin.mutate()}
@@ -88,7 +88,7 @@ export default function OrganisationAdminsPage() {
           </Button>
         </div>
 
-        <div className="border border-gray-100 rounded-xl divide-y divide-gray-50">
+        <div className="border border-gray-100 dark:border-gray-800 rounded-xl divide-y divide-gray-50 dark:divide-gray-800">
           {data.length === 0 ? (
             <p className="p-6 text-center text-gray-400 text-sm">
               No admins assigned yet.
@@ -97,7 +97,7 @@ export default function OrganisationAdminsPage() {
             data.map((admin) => (
               <div key={admin.id} className="flex items-center justify-between p-4">
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{admin.name}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white text-sm">{admin.name}</p>
                   <p className="text-xs text-gray-400">{admin.email}</p>
                 </div>
                 <button

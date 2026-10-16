@@ -7,6 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { playfairDisplay } from "@/lib/fonts";
+import { markOtpIssued } from "@/lib/otpSession";
 
 export default function SuperAdminLoginPage() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function SuperAdminLoginPage() {
     try {
       setLoading(true);
       await api.post("/super-admin/login", form);
+      markOtpIssued("super-admin-login");
       router.push("/super-admin/login/verify-otp");
     } catch (err) {
       if (err?.type === "NETWORK_ERROR") {

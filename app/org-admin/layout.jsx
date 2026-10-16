@@ -7,9 +7,10 @@ import {
   UsersIcon, UserIcon, DevicePhoneMobileIcon,
   BellIcon, ChartBarIcon, HomeIcon,
   Bars3Icon, XMarkIcon, ArrowLeftOnRectangleIcon,
-  CloudArrowUpIcon, Cog6ToothIcon,
+  CloudArrowUpIcon, Cog6ToothIcon, ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "@/context/AuthContext";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function OrgAdminLayout({ children }) {
   const pathname = usePathname();
@@ -20,6 +21,11 @@ export default function OrgAdminLayout({ children }) {
     { label: "Overview",       href: "/org-admin/dashboard",       icon: HomeIcon },
     { label: membersLabel,     href: "/org-admin/members",         icon: UsersIcon },
     { label: supportsLabel,    href: "/org-admin/support-staff",   icon: UserIcon },
+    // Parent-student relationships only exist for school organisations —
+    // the backend rejects these routes outright for any other org type.
+    ...(orgType === "SCHOOL"
+      ? [{ label: "Parent Consent", href: "/org-admin/parent-consent", icon: ShieldCheckIcon }]
+      : []),
     { label: "Wearables",      href: "/org-admin/wearables",       icon: DevicePhoneMobileIcon },
     { label: "Bulk Enroll",    href: "/org-admin/bulk-enrollment", icon: CloudArrowUpIcon },
     { label: "Alerts",         href: "/org-admin/alerts",          icon: BellIcon },
@@ -83,7 +89,7 @@ export default function OrgAdminLayout({ children }) {
               className={`group flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-150 ${
                 active
                   ? `${c.active} shadow-lg`
-                  : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 hover:text-gray-900"
+                  : "text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
               <item.icon className={`h-5 w-5 transition-transform group-hover:scale-110 ${active ? "text-white" : "text-gray-400 group-hover:text-current"}`} />
@@ -95,10 +101,14 @@ export default function OrgAdminLayout({ children }) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-50 dark:border-gray-800">
+      <div className="p-4 border-t border-gray-50 dark:border-gray-800 space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Theme</span>
+          <ThemeToggle compact accentColor={theme.primary} />
+        </div>
         <button
           onClick={logout}
-          className="flex items-center w-full gap-3 px-4 py-3 rounded-2xl hover:bg-red-50 text-gray-500 hover:text-red-600 transition-all group"
+          className="flex items-center w-full gap-3 px-4 py-3 rounded-2xl hover:bg-red-50 dark:hover:bg-red-500/10 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-all group"
         >
           <ArrowLeftOnRectangleIcon className="h-5 w-5 opacity-50 group-hover:opacity-100" />
           <span className="text-sm font-bold">Sign Out</span>
@@ -108,7 +118,7 @@ export default function OrgAdminLayout({ children }) {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950 font-sans">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-950 dim:bg-slate-200/70 font-sans">
       {/* Desktop sidebar */}
       <div className="hidden md:flex flex-shrink-0 shadow-sm">
         <Sidebar />
@@ -125,7 +135,7 @@ export default function OrgAdminLayout({ children }) {
       {/* Main */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex items-center justify-between h-20 px-6 md:px-8 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 z-10">
+        <header className="flex items-center justify-between h-20 px-6 md:px-8 bg-white/80 dark:bg-gray-900/80 dim:bg-[#EDF0F4]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 z-10">
           <button className="md:hidden p-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition" onClick={() => setSidebarOpen(true)}>
             <Bars3Icon className="h-5 w-5" />
           </button>

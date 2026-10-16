@@ -20,6 +20,7 @@ import {
   Globe,
 } from "lucide-react";
 import { ORG_THEMES } from "@/lib/orgTheme";
+import { markOtpIssued } from "@/lib/otpSession";
 
 // ── Org type config for this page (icons + email hints; colors/labels come from lib/orgTheme) ──
 const ORG_KEYS = ["SCHOOL", "COMPANY", "HOSPITAL", "NGO"];
@@ -109,6 +110,10 @@ export default function LoginPage() {
         return;
       }
 
+      try {
+        sessionStorage.setItem("lh_otp_ctx", JSON.stringify({ orgType: orgKey, email: form.email }));
+      } catch {}
+      markOtpIssued("admin-login");
       router.replace("/login/verify-otp");
     } catch (err) {
       const errorMessage = err?.response?.data?.message || "";
@@ -282,12 +287,12 @@ export default function LoginPage() {
                 );
               })}
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-widest transition-colors" style={{ color: orgResolved ? theme.primary : "#CBD5E1" }}>
+            <p className="text-[10px] font-black uppercase tracking-widest transition-colors" style={{ color: orgResolved ? theme.primary : "#64748B" }}>
               {orgLookupLoading
                 ? "Checking account…"
                 : orgResolved
                 ? `✓ Detected — ${theme.orgLabel}`
-                : "Pick your organisation type"}
+                : theme.orgLabel}
             </p>
           </div>
 

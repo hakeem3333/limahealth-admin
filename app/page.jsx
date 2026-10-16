@@ -64,11 +64,11 @@ const ORG_TYPES = [
     color:    C.navy,
     light:    C.navyLight,
     border:   "#B8CCEB",
-    tagline:  "Staff Mental Health Care",
-    headline: "Care for those\nwho care for others.",
-    sub:      "Give hospital staff the emotional support and monitoring they need. Therapist tools built for high-pressure clinical environments.",
-    member:   "Staff",
-    support:  "Therapists",
+    tagline:  "Clinical Care Coordination",
+    headline: "Better care, guided\nby real-time data.",
+    sub:      "Monitor patient wellness signals, manage doctor caseloads, and flag at-risk patients early — all from one secure dashboard.",
+    member:   "Patients",
+    support:  "Doctors",
   },
   {
     key:      "NGO",
@@ -135,7 +135,7 @@ export default function LandingPage() {
             <a href="#organisations" className="hover:opacity-70 transition-opacity">For Orgs</a>
             <a href="#process" className="hover:opacity-70 transition-opacity">How it works</a>
             <Link
-              href="/org-admin/login"
+              href="/login"
               className="transition-all"
               style={{
                 backgroundColor: C.navyLight,
@@ -552,7 +552,7 @@ export default function LandingPage() {
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
-                  href="/org-admin/login"
+                  href="/login"
                   className="flex items-center justify-center gap-2 px-10 py-5 rounded-2xl font-black text-sm uppercase tracking-widest transition-all"
                   style={{
                     border: "2px solid rgba(255,255,255,0.2)",

@@ -55,7 +55,7 @@ export default function AdminProfilePage() {
   return (
     <div className="space-y-8 max-w-2xl py-4">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
           Admin Profile
         </h1>
         <p className="text-gray-500 mt-1 text-lg">
@@ -64,17 +64,17 @@ export default function AdminProfilePage() {
       </div>
 
       {/* Account Overview */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 flex items-center gap-6 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 dim:bg-white rounded-2xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 p-6 flex items-center gap-6 shadow-sm">
         <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
           {user?.firstName?.charAt(0) || <User />}
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {user?.firstName} {user?.lastName}
           </h2>
           <p className="text-gray-500 font-medium">{user?.email}</p>
-          <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100 uppercase">
-            {user?.role?.replace("_", " ")}
+          <span className="inline-block mt-2 px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-100 dark:border-blue-500/20 uppercase">
+            {user?.role?.name?.replace("_", " ")}
           </span>
         </div>
       </div>
@@ -86,12 +86,12 @@ export default function AdminProfilePage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {successMsg && (
-            <div className="flex items-center gap-2 bg-green-50 text-green-700 p-4 rounded-xl border border-green-100 text-sm font-medium animate-in fade-in">
+            <div className="flex items-center gap-2 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 p-4 rounded-xl border border-green-100 dark:border-green-500/20 text-sm font-medium animate-in fade-in">
               <CheckCircle2 className="w-4 h-4" /> {successMsg}
             </div>
           )}
           {mutation.isError && (
-            <div className="flex items-center gap-2 bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 text-sm font-medium">
+            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 p-4 rounded-xl border border-red-100 dark:border-red-500/20 text-sm font-medium">
               <AlertTriangle className="w-4 h-4" />{" "}
               {mutation.error?.response?.data?.message ||
                 "Error updating password"}
@@ -165,14 +165,14 @@ export default function AdminProfilePage() {
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
           <div>
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-gray-900 dark:text-white">
               Current Device: Chrome on MacOS
             </p>
             <p className="text-xs text-gray-500">
               Last active: Just now • Lagos, Nigeria
             </p>
           </div>
-          <button className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+          <button className="rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             Logout Other Sessions
           </button>
         </div>
@@ -187,10 +187,10 @@ export default function AdminProfilePage() {
 
 function Section({ title, icon, children }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm space-y-4">
-      <div className="flex items-center gap-3 border-b border-gray-50 pb-4">
+    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white p-6 shadow-sm space-y-4">
+      <div className="flex items-center gap-3 border-b border-gray-50 dark:border-gray-800 pb-4">
         {icon}
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h2>
       </div>
       {children}
     </div>
@@ -200,13 +200,13 @@ function Section({ title, icon, children }) {
 function InputField({ label, value, onChange, type = "text", placeholder }) {
   return (
     <label className="flex flex-col text-sm gap-2">
-      <span className="font-semibold text-gray-700 ml-1">{label}</span>
+      <span className="font-semibold text-gray-700 dark:text-gray-300 ml-1">{label}</span>
       <input
         type={type}
         value={value ?? ""}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+        className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
       />
     </label>
   );
@@ -214,7 +214,7 @@ function InputField({ label, value, onChange, type = "text", placeholder }) {
 
 function CheckboxField({ label, description, checked, onChange }) {
   return (
-    <label className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group">
+    <label className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer group">
       <div className="relative flex items-center mt-1">
         <input
           type="checkbox"
@@ -224,7 +224,7 @@ function CheckboxField({ label, description, checked, onChange }) {
         />
       </div>
       <div className="flex flex-col">
-        <span className="font-bold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+        <span className="font-bold text-gray-900 dark:text-white text-sm group-hover:text-blue-600 transition-colors">
           {label}
         </span>
         {description && (

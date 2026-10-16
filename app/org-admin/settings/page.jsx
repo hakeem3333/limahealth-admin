@@ -1,12 +1,35 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
 import {
-  Settings, Building2, Activity, Bell, Database, Save, Loader2, CheckCircle2,
+  Settings, Building2, Activity, Bell, Database, Save, Loader2, CheckCircle2, Palette,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import ThemeToggle from "@/components/ThemeToggle";
+
+// Must stay in sync with the backend's orgSettings schema.
+const NUMERIC_FIELDS = ["heartRateThreshold", "sleepHoursThreshold", "dataRetentionMonths"];
+
+// Inputs yield strings; the API expects numbers and rejects empty values.
+function toPayload(form) {
+  const payload = {};
+  for (const [key, value] of Object.entries(form)) {
+    if (value === "" || value === null || value === undefined) continue;
+    payload[key] = NUMERIC_FIELDS.includes(key) ? Number(value) : value;
+  }
+  return payload;
+}
+
+function errorMessage(error) {
+  const data = error?.response?.data;
+  const fields = data?.errors?.fieldErrors;
+  if (fields && Object.keys(fields).length) {
+    return Object.entries(fields).map(([k, v]) => `${k}: ${v.join(", ")}`).join(" · ");
+  }
+  return data?.message || "Couldn't save settings. Please try again.";
+}
 
 const colorMap = {
   SCHOOL:   { icon: "text-blue-600",   btn: "bg-blue-600 hover:bg-blue-700 shadow-blue-100",   ring: "focus:ring-blue-500/10 focus:border-blue-500",   toggle: "bg-blue-600"   },
@@ -20,6 +43,7 @@ export default function OrgSettingsPage() {
   const c = colorMap[orgType] ?? colorMap.SCHOOL;
   const [form, setForm] = useState({});
   const [isSuccessVisible, setIsSuccessVisible] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["org-settings"],
@@ -30,15 +54,17 @@ export default function OrgSettingsPage() {
   });
 
   useEffect(() => {
-    if (data) setForm(data);
+    // API shape: { name, settings: { ...fields } }
+    if (data) setForm({ name: data.name, ...data.settings });
   }, [data]);
 
   const mutation = useMutation({
     mutationFn: async (values) => {
-      const res = await api.put("/org/settings", values);
+      const res = await api.put("/org/settings", toPayload(values));
       return res.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-settings"] });
       setIsSuccessVisible(true);
       setTimeout(() => setIsSuccessVisible(false), 3000);
     },
@@ -60,7 +86,7 @@ export default function OrgSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2.5">
             <span className="text-3xl">{theme?.icon}</span>
             {theme?.orgLabel} Settings
           </h1>
@@ -69,6 +95,20 @@ export default function OrgSettingsPage() {
           </p>
         </div>
       </div>
+
+      {/* Appearance — a per-browser display preference, not an org-wide policy,
+          so it's kept out of the form below and saved straight to this device. */}
+      <Section title="Appearance" icon={<Palette className={`h-5 w-5 ${c.icon}`} />}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">Interface theme</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Applies to this browser only — everyone else on your team picks their own.
+            </p>
+          </div>
+          <ThemeToggle accentColor={theme?.primary} />
+        </div>
+      </Section>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* School Profile */}
@@ -108,7 +148,7 @@ export default function OrgSettingsPage() {
           icon={<Activity className="h-5 w-5 text-orange-500" />}
         >
           <div className="bg-orange-50/50 p-4 rounded-2xl mb-4 text-xs text-orange-700 font-medium leading-relaxed">
-            Note: These values determine when the AI triggers a "High Risk" alert to your support staff.
+            Note: A heart rate at or above the BPM trigger raises a "High" alert to your support staff; 20 BPM above it raises a "Critical" alert. The sleep target feeds each member's AI wellness score.
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
@@ -117,6 +157,9 @@ export default function OrgSettingsPage() {
               value={form.heartRateThreshold}
               onChange={(v) => handleChange("heartRateThreshold", v)}
               suffix="BPM"
+              min={60}
+              max={200}
+              step={1}
             />
             <InputField
               label="Minimum Sleep Target"
@@ -124,6 +167,9 @@ export default function OrgSettingsPage() {
               value={form.sleepHoursThreshold}
               onChange={(v) => handleChange("sleepHoursThreshold", v)}
               suffix="Hours"
+              min={4}
+              max={12}
+              step={0.5}
             />
           </div>
         </Section>
@@ -162,6 +208,8 @@ export default function OrgSettingsPage() {
               value={form.dataRetentionMonths}
               onChange={(v) => handleChange("dataRetentionMonths", v)}
               suffix="Months"
+              min={1}
+              step={1}
             />
             <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest leading-tight">
               After this period, biometric logs are automatically anonymized.
@@ -170,7 +218,7 @@ export default function OrgSettingsPage() {
         </div>
 
         {/* Fixed Save Bar */}
-        <div className="flex items-center gap-4 pt-6 border-t border-gray-100">
+        <div className="flex items-center gap-4 pt-6 border-t border-gray-100 dark:border-gray-800">
           <button
             type="submit"
             disabled={mutation.isPending}
@@ -183,6 +231,10 @@ export default function OrgSettingsPage() {
             )}
             Save Configuration
           </button>
+
+          {mutation.isError && (
+            <p className="text-sm font-bold text-red-600">{errorMessage(mutation.error)}</p>
+          )}
 
           {isSuccessVisible && (
             <div className="flex items-center gap-2 text-green-600 font-bold animate-in fade-in slide-in-from-left-4">
@@ -202,17 +254,17 @@ export default function OrgSettingsPage() {
 
 function Section({ title, icon, children }) {
   return (
-    <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-3xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white p-6 shadow-sm">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-gray-50 rounded-xl">{icon}</div>
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        <div className="p-2 bg-gray-50 dark:bg-gray-800 dim:bg-slate-100 rounded-xl">{icon}</div>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h2>
       </div>
       {children}
     </div>
   );
 }
 
-function InputField({ label, value, onChange, type = "text", placeholder, suffix, ringClass = "focus:ring-blue-500/10 focus:border-blue-500" }) {
+function InputField({ label, value, onChange, type = "text", placeholder, suffix, min, max, step, ringClass = "focus:ring-blue-500/10 focus:border-blue-500" }) {
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
@@ -222,7 +274,10 @@ function InputField({ label, value, onChange, type = "text", placeholder, suffix
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3 text-sm font-bold text-gray-700 focus:ring-2 outline-none transition-all ${ringClass}`}
+          min={min}
+          max={max}
+          step={step}
+          className={`w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 px-4 py-3 text-sm font-bold text-gray-700 dark:text-gray-100 focus:ring-2 outline-none transition-all ${ringClass}`}
         />
         {suffix && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-300">{suffix}</span>
@@ -234,12 +289,12 @@ function InputField({ label, value, onChange, type = "text", placeholder, suffix
 
 function ToggleField({ label, description, checked, onChange, toggleClass = "bg-blue-600" }) {
   return (
-    <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => onChange(!checked)}>
+    <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer" onClick={() => onChange(!checked)}>
       <div className="space-y-0.5">
-        <p className="text-sm font-bold text-gray-900">{label}</p>
+        <p className="text-sm font-bold text-gray-900 dark:text-white">{label}</p>
         <p className="text-xs text-gray-500">{description}</p>
       </div>
-      <div className={`w-12 h-6 rounded-full p-1 transition-colors ${checked ? toggleClass : "bg-gray-200"}`}>
+      <div className={`w-12 h-6 rounded-full p-1 transition-colors ${checked ? toggleClass : "bg-gray-200 dark:bg-gray-700"}`}>
         <div className={`bg-white w-4 h-4 rounded-full shadow-sm transition-transform ${checked ? "translate-x-6" : "translate-x-0"}`} />
       </div>
     </div>

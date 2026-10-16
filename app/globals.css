@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* ─── Theme variants ────────────────────────────────────────────────────
+   Explicit 3-way theme (bright / semi-bright / dark), controlled by
+   data-theme on <html> (see context/ThemeContext.js) — not by the OS
+   prefers-color-scheme setting. `dark:` is redefined here so it matches
+   the app's own toggle instead of Tailwind's default OS-based behavior. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant dim (&:where([data-theme="semi-bright"], [data-theme="semi-bright"] *));
+
 /* ─── LimaHealth Design Tokens — "Teal Trust" ──────────────────────────── */
 :root {
   /* Super-admin / web brand */
@@ -21,8 +29,54 @@
   --lh-amber:         #F9A825;
   --lh-amber-light:   #FEF3CD;
 
-  --background: #ffffff;
+  --background: #F9FAFB;
   --foreground: #1B2A3B;
+}
+
+/* Semi-bright: same text colors as bright, just a muted/dimmer canvas — not
+   an inverted theme, so nothing else needs to change. */
+[data-theme="semi-bright"] {
+  --background: #D9E0E6;
+  --lh-page-bg: #E4E1D8;
+}
+
+/* Semi-bright surfaces: remap the light utility classes used across every page
+   so cards, panels, inputs, tints and borders are all muted (no pure white).
+   Unlayered on purpose — it must win over Tailwind's layered utilities. */
+[data-theme="semi-bright"] .bg-white,
+[data-theme="semi-bright"] .dim\:bg-white { background-color: #F3F5F8; }
+[data-theme="semi-bright"] .bg-gray-50:not(.dim\:bg-slate-200\/70),
+[data-theme="semi-bright"] .bg-slate-50 { background-color: #E7ECF0; }
+[data-theme="semi-bright"] .bg-gray-100,
+[data-theme="semi-bright"] .bg-slate-100 { background-color: #DCE3E8; }
+[data-theme="semi-bright"] .dim\:bg-slate-200\/70 { background-color: #D9E0E6; }
+[data-theme="semi-bright"] .hover\:bg-gray-50:hover { background-color: #E7ECF0; }
+[data-theme="semi-bright"] :is(.border-gray-50, .border-gray-100, .border-slate-100) { border-color: #CBD4DB; }
+[data-theme="semi-bright"] :is(.border-gray-200, .border-slate-200) { border-color: #BAC5CE; }
+[data-theme="semi-bright"] :is(.divide-gray-50, .divide-gray-100) > :not(:last-child) { border-color: #CBD4DB; }
+[data-theme="semi-bright"] .bg-lh-teal-light { background-color: #D4E5E4; }
+[data-theme="semi-bright"] .bg-blue-50 { background-color: color-mix(in srgb, var(--color-blue-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-green-50 { background-color: color-mix(in srgb, var(--color-green-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-emerald-50 { background-color: color-mix(in srgb, var(--color-emerald-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-amber-50 { background-color: color-mix(in srgb, var(--color-amber-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-yellow-50 { background-color: color-mix(in srgb, var(--color-yellow-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-orange-50 { background-color: color-mix(in srgb, var(--color-orange-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-red-50 { background-color: color-mix(in srgb, var(--color-red-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-purple-50 { background-color: color-mix(in srgb, var(--color-purple-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-indigo-50 { background-color: color-mix(in srgb, var(--color-indigo-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-teal-50 { background-color: color-mix(in srgb, var(--color-teal-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-sky-50 { background-color: color-mix(in srgb, var(--color-sky-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .bg-rose-50 { background-color: color-mix(in srgb, var(--color-rose-50) 78%, #B7C4CF); }
+[data-theme="semi-bright"] .shadow-sm,
+[data-theme="semi-bright"] .shadow-card { box-shadow: 0 1px 2px rgb(15 23 42 / 0.10), 0 0 0 1px rgb(15 23 42 / 0.03); }
+
+/* Dark: full inversion. Components pair this with explicit dark: utility
+   classes where contrast actually requires it (see org-admin/super-admin
+   layouts) rather than relying on these tokens alone. */
+[data-theme="dark"] {
+  --background: #0B0F12;
+  --foreground: #E7EBEE;
+  --lh-page-bg: #0F1715;
 }
 
 @theme inline {
@@ -44,14 +98,6 @@
   --shadow-card: 0 10px 30px rgba(18, 59, 57, 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --lh-page-bg: #0f1715;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -69,4 +115,51 @@ body {
   background-image:
     radial-gradient(circle at 15% 20%, rgba(31, 111, 107, 0.08), transparent 32%),
     radial-gradient(circle at 85% 0%, rgba(217, 140, 74, 0.07), transparent 35%);
+}
+
+/* ─── OTP entry motion ─────────────────────────────────────────────────── */
+@keyframes otp-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-8px); }
+  30% { transform: translateX(7px); }
+  45% { transform: translateX(-5px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+@keyframes otp-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes otp-halo {
+  0% { transform: scale(1); opacity: 0.35; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+.otp-shake { animation: otp-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+.otp-pop { animation: otp-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.otp-halo { animation: otp-halo 2.4s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .otp-shake, .otp-pop, .otp-halo { animation: none; }
+}
+
+/* ─── Interactive cursors ──────────────────────────────────────────────────
+   Tailwind v4 no longer gives buttons a pointer cursor by default. In the base
+   layer so any explicit cursor-* utility still wins. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  summary,
+  select:not(:disabled),
+  label[for],
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  select:disabled,
+  input:disabled {
+    cursor: not-allowed;
+  }
 }

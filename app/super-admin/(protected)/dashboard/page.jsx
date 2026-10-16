@@ -22,8 +22,8 @@ export default function SuperAdminDashboardPage() {
   if (error) {
     console.error("Failed to load super admin dashboard:", error);
     return (
-      <div className="rounded-2xl bg-white shadow-card p-12 text-center">
-        <p className="text-red-500 font-semibold">Failed to load dashboard.</p>
+      <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-card p-12 text-center">
+        <p className="text-red-500 dark:text-red-400 font-semibold">Failed to load dashboard.</p>
       </div>
     );
   }
@@ -38,10 +38,10 @@ export default function SuperAdminDashboardPage() {
   return (
     <div className="space-y-10">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal dark:text-lh-teal-light mb-2">
           Global Oversight
         </p>
-        <h1 className="font-display text-3xl font-bold text-lh-navy">
+        <h1 className="font-display text-3xl font-bold text-lh-navy dark:text-white">
           Super Admin Dashboard
         </h1>
         <p className="text-sm text-gray-500 mt-1">
@@ -83,12 +83,12 @@ function QuickLink({ href, label, desc, icon }) {
   return (
     <Link
       href={href}
-      className="group rounded-2xl bg-white p-7 shadow-card hover:shadow-lg transition-shadow relative overflow-hidden"
+      className="group rounded-2xl bg-white dark:bg-gray-900 dim:bg-white p-7 shadow-card hover:shadow-lg transition-shadow relative overflow-hidden"
     >
-      <div className="h-10 w-10 bg-lh-teal-light text-lh-teal rounded-xl flex items-center justify-center mb-5">
+      <div className="h-10 w-10 bg-lh-teal-light dark:bg-lh-teal/20 text-lh-teal dark:text-lh-teal-light rounded-xl flex items-center justify-center mb-5">
         {icon}
       </div>
-      <h3 className="font-display text-lg font-bold text-lh-navy mb-1.5">{label}</h3>
+      <h3 className="font-display text-lg font-bold text-lh-navy dark:text-white mb-1.5">{label}</h3>
       <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
       <ArrowUpRight className="absolute top-7 right-7 h-5 w-5 text-gray-300 group-hover:text-lh-accent group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
     </Link>
@@ -98,15 +98,15 @@ function QuickLink({ href, label, desc, icon }) {
 function DashboardSkeleton() {
   return (
     <div className="space-y-10 animate-pulse">
-      <div className="h-10 w-72 bg-gray-200 rounded-xl" />
+      <div className="h-10 w-72 bg-gray-200 dark:bg-gray-800 rounded-xl" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-28 bg-gray-200 rounded-2xl" />
+          <div key={i} className="h-28 bg-gray-200 dark:bg-gray-800 rounded-2xl" />
         ))}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-36 bg-gray-200 rounded-2xl" />
+          <div key={i} className="h-36 bg-gray-200 dark:bg-gray-800 rounded-2xl" />
         ))}
       </div>
     </div>

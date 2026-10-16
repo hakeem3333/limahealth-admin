@@ -20,16 +20,23 @@ const colorMap = {
 export default function MembersPage() {
   const { orgType, memberLabel, membersLabel } = useAuth();
   const c = colorMap[orgType] ?? colorMap.SCHOOL;
+  const isSchool = orgType === "SCHOOL";
+  const columns = [memberLabel, "Contact", ...(isSchool ? ["Age"] : []), "Wearable", "Risk", "Account", ""];
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [ageGroup, setAgeGroup] = useState("all");
   const debouncedSearch = useDebouncedValue(search);
 
   const { data = [], isLoading, isPlaceholderData, error } = useQuery({
-    queryKey: ["members", debouncedSearch, status],
+    queryKey: ["members", debouncedSearch, status, ageGroup],
     queryFn: async () => {
       const res = await api.get("/org/members", {
-        params: { search: debouncedSearch, status: status === "all" ? undefined : status },
+        params: {
+          search: debouncedSearch,
+          status: status === "all" ? undefined : status,
+          age: isSchool && ageGroup !== "all" ? ageGroup : undefined,
+        },
       });
       return res.data;
     },
@@ -43,7 +50,7 @@ export default function MembersPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">{membersLabel} Directory</h1>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">{membersLabel} Directory</h1>
           <p className="text-gray-500 mt-1 font-medium">
             Monitor {membersLabel.toLowerCase()} wellbeing and wearable connectivity.
           </p>
@@ -66,7 +73,7 @@ export default function MembersPage() {
             placeholder={`Search ${membersLabel.toLowerCase()}...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={`w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-100 bg-white shadow-sm focus:ring-2 outline-none transition-all ${c.ring}`}
+            className={`w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white dark:text-white shadow-sm focus:ring-2 outline-none transition-all ${c.ring}`}
           />
         </div>
         <div className="relative w-full md:w-48">
@@ -74,13 +81,28 @@ export default function MembersPage() {
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 appearance-none rounded-2xl border border-gray-100 bg-white shadow-sm font-bold text-gray-600 focus:ring-2 outline-none cursor-pointer ${c.ring}`}
+            className={`w-full pl-10 pr-4 py-3 appearance-none rounded-2xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white shadow-sm font-bold text-gray-600 dark:text-gray-300 focus:ring-2 outline-none cursor-pointer ${c.ring}`}
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
         </div>
+        {isSchool && (
+          <div className="relative w-full md:w-48">
+            <select
+              value={ageGroup}
+              onChange={(e) => setAgeGroup(e.target.value)}
+              aria-label="Filter by age"
+              className={`w-full px-4 py-3 appearance-none rounded-2xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white shadow-sm font-bold text-gray-600 dark:text-gray-300 focus:ring-2 outline-none cursor-pointer ${c.ring}`}
+            >
+              <option value="all">All Ages</option>
+              <option value="minors">Under 18</option>
+              <option value="adults">18 and over</option>
+              <option value="unknown">Age unknown</option>
+            </select>
+          </div>
+        )}
         <div className={`ml-auto flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-black ${c.count}`}>
           {data.length} {membersLabel}
         </div>
@@ -88,51 +110,54 @@ export default function MembersPage() {
 
       {/* Table */}
       <div
-        className={`bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}
+        className={`bg-white dark:bg-gray-900 dim:bg-white rounded-3xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 shadow-xl overflow-hidden transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}
       >
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-50">
-                {[memberLabel, "Contact", "Wearable", "Risk", "Account", ""].map((h, i) => (
-                  <th key={i} className={`px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest ${i === 5 ? "text-right" : ""}`}>{h}</th>
+              <tr className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
+                {columns.map((h, i) => (
+                  <th key={i} className={`px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest ${i === columns.length - 1 ? "text-right" : ""}`}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-20 text-center">
+                  <td colSpan={columns.length} className="p-20 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <UserCircle2 className="h-12 w-12 text-gray-200" />
+                      <UserCircle2 className="h-12 w-12 text-gray-200 dark:text-gray-700" />
                       <p className="text-gray-400 font-bold">No {membersLabel.toLowerCase()} found matching those criteria.</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 data.map((member) => (
-                  <tr key={member.id} className="group hover:bg-gray-50/30 transition-colors">
+                  <tr key={member.id} className="group hover:bg-gray-50/30 dark:hover:bg-gray-800/40 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className={`h-10 w-10 rounded-full flex items-center justify-center font-black text-xs ${c.avatar}`}>
                           {(member.name || "?").split(" ").map((n) => n[0]).join("").toUpperCase()}
                         </div>
-                        <Link href={`/org-admin/members/${member.id}`} className="font-bold text-gray-900 hover:underline">
+                        <Link href={`/org-admin/members/${member.id}`} className="font-bold text-gray-900 dark:text-white hover:underline">
                           {member.name}
                         </Link>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-gray-500">
+                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                         <Mail className="h-3.5 w-3.5 opacity-50" />
                         <span className="text-xs font-medium">{member.email}</span>
                       </div>
                     </td>
+                    {isSchool && (
+                      <td className="px-6 py-4"><AgeCell age={member.age} isMinor={member.isMinor} /></td>
+                    )}
                     <td className="px-6 py-4"><WearableBadge connected={member.wearableConnected} /></td>
                     <td className="px-6 py-4"><RiskBadge level={member.riskLevel} /></td>
                     <td className="px-6 py-4"><StatusBadge active={member.isActive} /></td>
                     <td className="px-6 py-4 text-right">
-                      <Link href={`/org-admin/members/${member.id}`} className="p-2 text-gray-300 hover:text-current transition-all inline-block">
+                      <Link href={`/org-admin/members/${member.id}`} className="p-2 text-gray-300 dark:text-gray-600 hover:text-current transition-all inline-block">
                         <ChevronRight className="h-5 w-5" />
                       </Link>
                     </td>
@@ -154,10 +179,26 @@ export default function MembersPage() {
   );
 }
 
+function AgeCell({ age, isMinor }) {
+  if (age === null || age === undefined) return <span className="text-xs text-gray-300 dark:text-gray-600 font-bold">—</span>;
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{age}</span>
+      {isMinor && (
+        <span className="whitespace-nowrap px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-tight border bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-500/20">
+          Under 18
+        </span>
+      )}
+    </div>
+  );
+}
+
 function StatusBadge({ active }) {
   return (
     <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border ${
-      active ? "bg-green-50 text-green-700 border-green-100" : "bg-gray-100 text-gray-500 border-gray-200"
+      active
+        ? "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-100 dark:border-green-500/20"
+        : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700"
     }`}>
       {active ? "Active" : "Inactive"}
     </span>
@@ -167,7 +208,9 @@ function StatusBadge({ active }) {
 function WearableBadge({ connected }) {
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border ${
-      connected ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-orange-50 text-orange-700 border-orange-100"
+      connected
+        ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-500/20"
+        : "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-500/20"
     }`}>
       <Watch className="h-3 w-3" />
       {connected ? "Linked" : "Missing"}
@@ -176,9 +219,13 @@ function WearableBadge({ connected }) {
 }
 
 function RiskBadge({ level }) {
-  const styles = { LOW: "bg-green-50 text-green-600 border-green-100", MEDIUM: "bg-amber-50 text-amber-600 border-amber-100", HIGH: "bg-red-50 text-red-600 border-red-100" };
+  const styles = {
+    LOW: "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-100 dark:border-green-500/20",
+    MEDIUM: "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-500/20",
+    HIGH: "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-500/20",
+  };
   return (
-    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border ${styles[level] || "bg-gray-50 text-gray-500 border-gray-100"}`}>
+    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border ${styles[level] || "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-100 dark:border-gray-700"}`}>
       {level ?? "N/A"}
     </span>
   );
@@ -188,11 +235,11 @@ function MembersSkeleton() {
   return (
     <div className="space-y-8 animate-pulse">
       <div className="flex justify-between items-center">
-        <div className="h-10 w-48 bg-gray-200 rounded-lg" />
-        <div className="h-12 w-40 bg-gray-200 rounded-xl" />
+        <div className="h-10 w-48 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+        <div className="h-12 w-40 bg-gray-200 dark:bg-gray-800 rounded-xl" />
       </div>
-      <div className="h-14 w-full bg-gray-200 rounded-2xl" />
-      <div className="h-96 w-full bg-gray-200 rounded-3xl" />
+      <div className="h-14 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl" />
+      <div className="h-96 w-full bg-gray-200 dark:bg-gray-800 rounded-3xl" />
     </div>
   );
 }

@@ -37,7 +37,7 @@ export default function AlertsPage() {
 
   const updateStatus = useMutation({
     mutationFn: ({ id, newStatus }) => api.patch(`/org/alerts/${id}`, { status: newStatus }),
-    onSuccess: () => queryClient.invalidateQueries(["org-alerts"]),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["org-alerts"] }),
   });
 
   if (isLoading) return <AlertsSkeleton />;
@@ -46,7 +46,7 @@ export default function AlertsPage() {
     <div className="space-y-8 py-4">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2.5">
+        <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2.5">
           <BellRing className="h-8 w-8 text-red-500" />
           Risk Alerts
         </h1>
@@ -57,27 +57,27 @@ export default function AlertsPage() {
 
       <SubscriptionGuard status={user?.orgStatus}>
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 text-gray-400 mr-2 border-r pr-4 border-gray-100">
+        <div className="flex flex-wrap items-center gap-4 bg-white dark:bg-gray-900 dim:bg-white p-4 rounded-2xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 shadow-sm">
+          <div className="flex items-center gap-2 text-gray-400 mr-2 border-r pr-4 border-gray-100 dark:border-gray-800">
             <Filter className="h-4 w-4" />
             <span className="text-xs font-black uppercase tracking-wider">Filters</span>
           </div>
-          <FilterSelect label="Severity" value={severity} onChange={setSeverity} options={["ALL", "LOW", "MEDIUM", "HIGH", "CRITICAL"]} />
-          <FilterSelect label="Status"   value={status}   onChange={setStatus}   options={["ALL", "OPEN", "ACKNOWLEDGED", "RESOLVED"]} />
+          <FilterSelect label="Severity" value={severity} onChange={setSeverity} options={["ALL", "MODERATE", "HIGH", "CRITICAL"]} />
+          <FilterSelect label="Status"   value={status}   onChange={setStatus}   options={["ALL", "OPEN", "RESOLVED"]} />
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 dim:bg-white rounded-3xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-gray-50/50 border-b border-gray-50">
+                <tr className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
                   {[memberLabel, "Risk Details", `Assigned ${supportLabel}`, "Status", "Timestamp", "Actions"].map((h, i) => (
                     <th key={i} className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400 ${i === 5 ? "text-right" : ""}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                 {data.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-12 text-center">
@@ -89,14 +89,14 @@ export default function AlertsPage() {
                   </tr>
                 ) : (
                   data.map((alert) => (
-                    <tr key={alert.id} className="group hover:bg-gray-50/50 transition-colors">
+                    <tr key={alert.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                       <td className="px-6 py-5">
                         <Link href={`/org-admin/members/${alert.memberId}`} className="flex items-center gap-3 group/link">
                           <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold border ${colorMap[orgType]?.badge ?? "bg-blue-50 text-blue-600 border-blue-100"}`}>
                             {(alert.studentName || alert.memberName || "?").charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-gray-900 group-hover/link:underline">
+                            <p className="font-bold text-gray-900 dark:text-white group-hover/link:underline">
                               {alert.studentName || alert.memberName}
                             </p>
                             <p className="text-xs text-gray-400">ID: {(alert.memberId || "").substring(0, 8)}</p>
@@ -106,12 +106,12 @@ export default function AlertsPage() {
                       <td className="px-6 py-5">
                         <div className="flex flex-col gap-1">
                           <SeverityBadge level={alert.severity} />
-                          <span className="text-sm font-medium text-gray-600">{alert.trigger}</span>
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{alert.trigger}</span>
                         </div>
                       </td>
                       <td className="px-6 py-5">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <UserCircle className="h-4 w-4 text-gray-300" />
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                          <UserCircle className="h-4 w-4 text-gray-300 dark:text-gray-600" />
                           <span className="text-sm">{alert.counselorName || alert.staffName || "Unassigned"}</span>
                         </div>
                       </td>
@@ -124,23 +124,22 @@ export default function AlertsPage() {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {alert.status === "OPEN" && (
-                            <button
-                              onClick={() => updateStatus.mutate({ id: alert.id, newStatus: "ACKNOWLEDGED" })}
-                              className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-lg text-xs font-black hover:bg-amber-100 transition-colors"
-                            >
-                              Acknowledge
-                            </button>
-                          )}
-                          {alert.status !== "RESOLVED" && (
+                          {alert.status === "OPEN" ? (
                             <button
                               onClick={() => updateStatus.mutate({ id: alert.id, newStatus: "RESOLVED" })}
                               className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-black hover:bg-green-700 transition-colors"
                             >
                               Resolve
                             </button>
+                          ) : (
+                            <button
+                              onClick={() => updateStatus.mutate({ id: alert.id, newStatus: "OPEN" })}
+                              className="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700 rounded-lg text-xs font-black hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              Reopen
+                            </button>
                           )}
-                          <Link href={`/org-admin/alerts/${alert.id}`} className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors">
+                          <Link href={`/org-admin/alerts/${alert.id}`} className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                             <ChevronRight className="h-5 w-5" />
                           </Link>
                         </div>
@@ -164,7 +163,7 @@ function FilterSelect({ label, value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+        className="appearance-none bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
       >
         {options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
       </select>
@@ -174,20 +173,19 @@ function FilterSelect({ label, value, onChange, options }) {
 
 function SeverityBadge({ level }) {
   const styles = {
-    LOW:      "bg-green-50 text-green-700 border-green-100",
-    MEDIUM:   "bg-amber-50 text-amber-700 border-amber-100",
-    HIGH:     "bg-orange-50 text-orange-700 border-orange-100",
-    CRITICAL: "bg-red-50 text-red-700 border-red-100 animate-pulse",
+    MODERATE: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-500/20",
+    HIGH:     "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-500/20",
+    CRITICAL: "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-100 dark:border-red-500/20 animate-pulse",
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black border uppercase tracking-tighter ${styles[level] || "bg-gray-100 text-gray-600 border-gray-200"}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black border uppercase tracking-tighter ${styles[level] || "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700"}`}>
       {level}
     </span>
   );
 }
 
 function AlertStatusBadge({ status }) {
-  const styles = { OPEN: "text-red-600", ACKNOWLEDGED: "text-amber-600", RESOLVED: "text-green-600" };
+  const styles = { OPEN: "text-red-600 dark:text-red-400", RESOLVED: "text-green-600 dark:text-green-400" };
   return (
     <div className="flex items-center gap-1.5">
       <div className={`h-1.5 w-1.5 rounded-full bg-current ${styles[status]}`} />
@@ -199,9 +197,9 @@ function AlertStatusBadge({ status }) {
 function AlertsSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div className="h-10 w-48 bg-gray-200 rounded-lg" />
-      <div className="h-16 w-full bg-gray-200 rounded-2xl" />
-      <div className="h-[400px] w-full bg-gray-200 rounded-3xl" />
+      <div className="h-10 w-48 bg-gray-200 dark:bg-gray-800 rounded-lg" />
+      <div className="h-16 w-full bg-gray-200 dark:bg-gray-800 rounded-2xl" />
+      <div className="h-[400px] w-full bg-gray-200 dark:bg-gray-800 rounded-3xl" />
     </div>
   );
 }

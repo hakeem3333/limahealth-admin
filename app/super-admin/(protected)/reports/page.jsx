@@ -23,7 +23,7 @@ export default function SuperAdminReportsPage() {
   if (isLoading) {
     return (
       <div className="p-8 text-center">
-        <p className="text-muted-foreground">Loading reports...</p>
+        <p className="text-gray-500 dark:text-gray-400">Loading reports...</p>
       </div>
     );
   }
@@ -31,7 +31,7 @@ export default function SuperAdminReportsPage() {
   if (error) {
     console.error("Failed to load reports:", error);
     return (
-      <div className="p-8 text-center text-red-500">
+      <div className="p-8 text-center text-red-500 dark:text-red-400">
         Failed to load reports.
       </div>
     );
@@ -52,8 +52,8 @@ export default function SuperAdminReportsPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Platform Reports</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-2xl font-bold text-lh-navy dark:text-white">Platform Reports</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Aggregated insights across all schools
         </p>
       </div>
@@ -64,7 +64,7 @@ export default function SuperAdminReportsPage() {
         <select
           value={range}
           onChange={(e) => setRange(e.target.value)}
-          className="rounded-md border px-3 py-1 text-sm"
+          className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 dim:bg-white dark:text-white px-3 py-1 text-sm"
         >
           <option value="7d">Last 7 days</option>
           <option value="30d">Last 30 days</option>
@@ -72,13 +72,13 @@ export default function SuperAdminReportsPage() {
         </select>
 
         {isFetching && (
-          <span className="text-xs text-muted-foreground">Updating…</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">Updating…</span>
         )}
       </div>
 
       {/* Empty State */}
       {isEmpty && (
-        <div className="rounded-xl border border-dashed p-6 text-center text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-6 text-center text-gray-500 dark:text-gray-400">
           No activity recorded for the selected period.
         </div>
       )}
@@ -91,9 +91,9 @@ export default function SuperAdminReportsPage() {
       </div>
 
       {/* Trends Placeholder */}
-      <div className="rounded-xl border bg-white dark:bg-gray-900 p-6">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white p-6">
         <h2 className="font-semibold mb-2">Trends</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Charts (stress trends, alert frequency, wearable adoption) will appear
           here.
         </p>
@@ -108,8 +108,8 @@ export default function SuperAdminReportsPage() {
 
 function StatCard({ title, value }) {
   return (
-    <div className="rounded-xl border bg-white dark:bg-gray-900 p-4">
-      <p className="text-xs text-muted-foreground uppercase tracking-wide">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 dim:border-slate-300/70 bg-white dark:bg-gray-900 dim:bg-white p-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
         {title}
       </p>
       <p className="text-2xl font-bold mt-1">{value}</p>

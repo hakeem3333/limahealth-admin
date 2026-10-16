@@ -6,6 +6,7 @@ import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { api } from "@/lib/axios";
 import Button from "@/components/super-admin/ui/Button";
 import { Card } from "@/components/super-admin/ui/Card";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function SuperAdminSettingsPage() {
   const queryClient = useQueryClient();
@@ -55,10 +56,10 @@ export default function SuperAdminSettingsPage() {
   return (
     <div className="max-w-3xl space-y-8">
       <header>
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-lh-teal dark:text-lh-teal-light mb-2">
           Core Infrastructure
         </p>
-        <h1 className="font-display text-3xl font-bold text-lh-navy">
+        <h1 className="font-display text-3xl font-bold text-lh-navy dark:text-white">
           Platform Settings
         </h1>
         <p className="text-sm text-gray-500 mt-1">
@@ -78,6 +79,22 @@ export default function SuperAdminSettingsPage() {
           {errorMsg}
         </div>
       )}
+
+      {/* Appearance — a per-browser display preference, not a platform-wide
+          policy, so it's kept out of the form below and saved straight to
+          this device rather than sent to /super-admin/settings. */}
+      <Card className="space-y-4">
+        <h2 className="font-display font-bold text-lh-navy dark:text-white">Appearance</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">Interface theme</p>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Applies to this browser only — every Super Admin picks their own.
+            </p>
+          </div>
+          <ThemeToggle accentColor="#1F6F6B" />
+        </div>
+      </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Section title="Platform Governance">
@@ -155,7 +172,7 @@ export default function SuperAdminSettingsPage() {
 function Section({ title, children }) {
   return (
     <Card className="space-y-4 p-6">
-      <h2 className="font-display font-bold text-lh-navy">{title}</h2>
+      <h2 className="font-display font-bold text-lh-navy dark:text-white">{title}</h2>
       {children}
     </Card>
   );
@@ -164,7 +181,7 @@ function Section({ title, children }) {
 function Toggle({ label, checked, onChange }) {
   return (
     <label className="flex justify-between items-center text-sm">
-      <span className="text-gray-700">{label}</span>
+      <span className="text-gray-700 dark:text-gray-300">{label}</span>
       <input
         type="checkbox"
         checked={checked}
@@ -178,14 +195,14 @@ function Toggle({ label, checked, onChange }) {
 function NumberField({ label, value, onChange, min, max }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-gray-700">{label}</span>
+      <span className="text-gray-700 dark:text-gray-300">{label}</span>
       <input
         type="number"
         min={min}
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-lh-teal outline-none"
+        className="border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-3 py-2 focus:ring-2 focus:ring-lh-teal outline-none"
       />
     </label>
   );
@@ -194,11 +211,11 @@ function NumberField({ label, value, onChange, min, max }) {
 function Select({ label, value, options, onChange }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-gray-700">{label}</span>
+      <span className="text-gray-700 dark:text-gray-300">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-lh-teal outline-none"
+        className="border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-3 py-2 focus:ring-2 focus:ring-lh-teal outline-none"
       >
         {options.map((opt) => (
           <option key={opt} value={opt}>

@@ -32,7 +32,7 @@ export default function NewCounselorPage() {
     // Same single-row enrollment endpoint the members form uses — it already
     // resolves either role tier (member or support) via the org's own
     // vocabulary. This form only ever creates the support tier (Counselor/
-    // Wellness Coach/Therapist/Support Worker depending on org type).
+    // Wellness Coach/Doctor/Support Worker depending on org type).
     mutationFn: (values) => api.post("/org/members", { ...values, role: supportLabel }),
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["support-staff"] });
@@ -62,10 +62,10 @@ export default function NewCounselorPage() {
       </Link>
 
       <div>
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Add {supportLabel}</h1>
+        <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Add {supportLabel}</h1>
         <p className="text-gray-500 mt-1 font-medium">
           Add a single {supportLabel.toLowerCase()}. For onboarding many at once, use{" "}
-          <Link href="/org-admin/bulk-enrollment" className="underline font-bold text-gray-700">
+          <Link href="/org-admin/bulk-enrollment" className="underline font-bold text-gray-700 dark:text-gray-300">
             Bulk Enroll
           </Link>{" "}
           instead.
@@ -73,11 +73,11 @@ export default function NewCounselorPage() {
       </div>
 
       {successMsg ? (
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-10 text-center space-y-4">
-          <div className="h-14 w-14 mx-auto rounded-2xl bg-green-50 text-green-600 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-900 dim:bg-white rounded-3xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 shadow-xl p-10 text-center space-y-4">
+          <div className="h-14 w-14 mx-auto rounded-2xl bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center">
             <CheckCircle2 className="h-7 w-7" />
           </div>
-          <p className="text-lg font-black text-gray-900">Added successfully</p>
+          <p className="text-lg font-black text-gray-900 dark:text-white">Added successfully</p>
           <p className="text-sm text-gray-500 max-w-sm mx-auto">{successMsg}</p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
@@ -88,7 +88,7 @@ export default function NewCounselorPage() {
             </button>
             <Link
               href="/org-admin/support-staff"
-              className="rounded-2xl px-6 py-3 font-black text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all"
+              className="rounded-2xl px-6 py-3 font-black text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
             >
               Back to List
             </Link>
@@ -97,10 +97,10 @@ export default function NewCounselorPage() {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8 space-y-6"
+          className="bg-white dark:bg-gray-900 dim:bg-white rounded-3xl border border-gray-100 dark:border-gray-800 dim:border-slate-300/70 shadow-xl p-8 space-y-6"
         >
           {errorMsg && (
-            <div className="rounded-2xl bg-red-50 border border-red-100 text-red-700 px-4 py-3 text-sm font-bold">
+            <div className="rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 text-red-700 dark:text-red-400 px-4 py-3 text-sm font-bold">
               {errorMsg}
             </div>
           )}
@@ -135,7 +135,7 @@ export default function NewCounselorPage() {
             <label className="text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1">
               Role
             </label>
-            <div className="w-full px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50 text-gray-500 font-medium">
+            <div className="w-full px-4 py-3 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">
               {supportLabel}
             </div>
           </div>
@@ -165,7 +165,7 @@ function Field({ label, value, onChange, type = "text", ring, required }) {
         value={value}
         required={required}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-4 py-3 rounded-2xl border border-gray-100 bg-white shadow-sm focus:ring-2 outline-none transition-all font-medium ${ring}`}
+        className={`w-full px-4 py-3 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 dark:text-white shadow-sm focus:ring-2 outline-none transition-all font-medium ${ring}`}
       />
     </label>
   );

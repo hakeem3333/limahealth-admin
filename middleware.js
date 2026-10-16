@@ -27,9 +27,15 @@ export function middleware(request) {
   }
 
   // Super Admin protection
+  // super_access_token expires after 15 min, and super_refresh_token is scoped to
+  // the refresh endpoint so it never reaches here. super_session (lives as long as
+  // the refresh session) lets the page load anyway — its first API call 401s and
+  // the axios interceptor refreshes, or redirects to login if the session is dead.
   if (pathname.startsWith("/super-admin") && !pathname.includes("/login")) {
     const token = request.cookies.get("super_access_token");
-    if (!token || decodeJwtRole(token.value) !== "SUPER_ADMIN") {
+    const hasAccess = token && decodeJwtRole(token.value) === "SUPER_ADMIN";
+    const hasSession = request.cookies.get("super_session")?.value === "1";
+    if (!hasAccess && !hasSession) {
       return NextResponse.redirect(new URL("/super-admin/login", request.url));
     }
   }
@@ -53,8 +59,12 @@ export function middleware(request) {
   if (isOrgAdmin || isBilling) {
     const token     = request.cookies.get("access_token");
     const orgStatus = request.cookies.get("org_status")?.value;
+    // Same as super-admin: admin_session outlives the 15-min access_token so the
+    // page can load and let the axios interceptor refresh (or bounce to /login).
+    const hasAccess  = token && decodeJwtRole(token.value) === "ORG_ADMIN";
+    const hasSession = request.cookies.get("admin_session")?.value === "1";
 
-    if (!token || decodeJwtRole(token.value) !== "ORG_ADMIN") {
+    if (!hasAccess && !hasSession) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 

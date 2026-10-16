@@ -1,324 +1,53 @@
-// "use client";
-
-// import { useState, useEffect, useRef } from "react";
-// import { useRouter } from "next/navigation";
-// import { api } from "@/lib/axios";
-
-// export default function VerifyOtpPage() {
-//   const router = useRouter();
-//   const [otp, setOtp] = useState("");
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState("");
-//   const [timeLeft, setTimeLeft] = useState(600);
-
-//   const inputRef = useRef(null);
-
-//   // Timer logic
-//   useEffect(() => {
-//     if (timeLeft <= 0) return;
-//     const timer = setInterval(() => {
-//       setTimeLeft((prev) => prev - 1);
-//     }, 1000);
-//     return () => clearInterval(timer);
-//   }, [timeLeft]);
-
-//   const formatTime = (seconds) => {
-//     const mins = Math.floor(seconds / 60);
-//     const secs = seconds % 60;
-//     return `${mins}:${secs.toString().padStart(2, "0")}`;
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setError("");
-
-//     if (otp.length !== 6) {
-//       setError("Please enter the 6-digit code");
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-//       await api.post("/auth/admin/verify-otp", { otp });
-//       router.push("/school-admin/dashboard");
-//     } catch (err) {
-//       // 🌐 Network / backend unreachable
-//       if (err?.type === "NETWORK_ERROR") {
-//         setError("Unable to connect to the server. Please try again later.");
-//         return;
-//       }
-
-//       // 🔐 OTP validation / expiry
-//       setError(err?.response?.data?.message || "Invalid or expired code.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleBoxClick = () => {
-//     inputRef.current?.focus();
-//   };
-
-//   return (
-//     <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-//       <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-sm border border-gray-100">
-//         <h1 className="text-2xl font-bold text-center text-gray-900">
-//           Verify Login
-//         </h1>
-//         <p className="mt-2 text-sm text-center text-gray-600">
-//           We sent a code to your email. It expires in{" "}
-//           <span className="font-semibold text-orange-600">
-//             {formatTime(timeLeft)}
-//           </span>
-//         </p>
-
-//         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-//           {error && (
-//             <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-100 text-center">
-//               {error}
-//             </div>
-//           )}
-
-//           <div className="relative">
-//             <input
-//               ref={inputRef}
-//               type="text"
-//               inputMode="numeric"
-//               maxLength={6}
-//               value={otp}
-//               onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-//               className="absolute inset-0 opacity-0 cursor-default"
-//               autoFocus
-//             />
-
-//             <div
-//               className="flex justify-between gap-2"
-//               onClick={handleBoxClick}
-//             >
-//               {[...Array(6)].map((_, i) => (
-//                 <div
-//                   key={i}
-//                   className={`w-12 h-14 border-2 rounded-lg flex items-center justify-center text-xl font-bold transition-all ${
-//                     otp.length === i
-//                       ? "border-black ring-2 ring-black/5"
-//                       : "border-gray-200"
-//                   } ${otp[i] ? "bg-gray-50" : "bg-white"}`}
-//                 >
-//                   {otp[i] || ""}
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-
-//           <button
-//             type="submit"
-//             disabled={loading || timeLeft === 0 || otp.length < 6}
-//             className="w-full rounded-md bg-black py-3 text-white font-medium hover:bg-gray-800 disabled:opacity-50 disabled:bg-gray-400 transition-colors"
-//           >
-//             {loading
-//               ? "Verifying..."
-//               : timeLeft === 0
-//                 ? "Code Expired"
-//                 : "Verify & Sign In"}
-//           </button>
-
-//           <div className="flex flex-col gap-3 pt-2">
-//             {timeLeft === 0 && (
-//               <button
-//                 type="button"
-//                 onClick={() => window.location.reload()}
-//                 className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-//               >
-//                 Resend Code
-//               </button>
-//             )}
-//             <button
-//               type="button"
-//               onClick={() => router.replace("/login")}
-//               className="text-sm text-gray-500 hover:text-black transition-colors"
-//             >
-//               Back to login
-//             </button>
-//           </div>
-//         </form>
-//       </div>
-//     </main>
-//   );
-// }
-
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ShieldCheck } from "lucide-react";
 import { api } from "@/lib/axios";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  Loader2, 
-  ShieldCheck, 
-  ArrowLeft, 
-  RefreshCcw, 
-  Eye, 
-  EyeOff 
-} from "lucide-react";
+import { ORG_THEMES, DEFAULT_THEME } from "@/lib/orgTheme";
+import OtpVerifyScreen, { maskEmail } from "@/components/otp/OtpVerifyScreen";
 
 export default function VerifyOtpPage() {
   const router = useRouter();
-  const { refreshUser } = useAuth();
-  const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [timeLeft, setTimeLeft] = useState(600);
-  const [showOtp, setShowOtp] = useState(true); // Default to true for better UX on OTP
+  const { startSession } = useAuth();
+  const [ctx, setCtx] = useState(null);
 
-  const inputRef = useRef(null);
-
-  // Timer logic
+  // The login page leaves the org type + email here so this screen can match
+  // the org's colour and show where the code went. Purely cosmetic.
   useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (otp.length !== 6) {
-      setError("Please enter the 6-digit code");
-      return;
-    }
-
     try {
-      setLoading(true);
-      await api.post("/auth/admin/verify-otp", { otp });
-      await refreshUser();
-      router.push("/school-admin/dashboard");
-    } catch (err) {
-      setError(err?.response?.data?.message || "Invalid or expired code.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      const raw = sessionStorage.getItem("lh_otp_ctx");
+      if (raw) setCtx(JSON.parse(raw));
+    } catch {}
+  }, []);
 
-  const handleBoxClick = () => {
-    inputRef.current?.focus();
+  const theme = ORG_THEMES[ctx?.orgType] ?? DEFAULT_THEME;
+
+  const handleSubmit = async (otp) => {
+    await api.post("/auth/admin/verify-otp", { otp });
+    await startSession();
+    try {
+      sessionStorage.removeItem("lh_otp_ctx");
+    } catch {}
+    router.push("/org-admin/dashboard");
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-[2.5rem] bg-white p-10 shadow-2xl shadow-blue-900/5 border border-gray-100">
-        <div className="text-center mb-8">
-          <div className="mx-auto h-14 w-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
-            <ShieldCheck className="h-7 w-7 text-blue-600" />
-          </div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tighter">
-            Security Verification
-          </h1>
-          <p className="mt-3 text-sm text-gray-500 font-medium px-6 leading-relaxed">
-            Enter the 6-digit code sent to your email. Expiring in{" "}
-            <span
-              className={`font-mono font-black ${timeLeft < 60 ? "text-red-500" : "text-blue-600"}`}
-            >
-              {formatTime(timeLeft)}
-            </span>
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {error && (
-            <div className="rounded-2xl bg-red-50 px-4 py-3 text-xs font-black uppercase tracking-widest text-red-600 border border-red-100 text-center animate-shake">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-center px-1">
-               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Enter Passcode</label>
-               <button 
-                type="button"
-                onClick={() => setShowOtp(!showOtp)}
-                className="text-gray-400 hover:text-blue-600 transition-colors"
-               >
-                 {showOtp ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-               </button>
-            </div>
-
-            <div className="relative group cursor-text" onClick={handleBoxClick}>
-              <input
-                ref={inputRef}
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="absolute inset-0 opacity-0 cursor-default"
-                autoFocus
-              />
-
-              <div className="flex justify-between gap-2">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-12 h-16 border-2 rounded-2xl flex items-center justify-center text-xl font-black transition-all duration-300 ${
-                      otp.length === i
-                        ? "border-blue-600 ring-4 ring-blue-50 scale-105"
-                        : "border-gray-100"
-                    } ${otp[i] ? "bg-white border-blue-100 text-blue-600 shadow-sm" : "bg-gray-50/50 text-gray-900"}`}
-                  >
-                    {otp[i] ? (showOtp ? otp[i] : "•") : ""}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || timeLeft === 0 || otp.length < 6}
-            className="w-full rounded-2xl bg-gray-950 py-5 text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-blue-600 disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400 transition-all shadow-xl shadow-blue-900/10 flex justify-center items-center"
-          >
-            {loading ? (
-              <Loader2 className="animate-spin h-5 w-5" />
-            ) : (
-              "Authorize Access"
-            )}
-          </button>
-
-          <div className="flex flex-col items-center gap-6 pt-6 border-t border-gray-50">
-            {timeLeft === 0 ? (
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="flex items-center text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700"
-              >
-                <RefreshCcw className="mr-2 h-3 w-3" />
-                Request New Protocol
-              </button>
-            ) : (
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                Check your inbound mail folders
-              </p>
-            )}
-
-            <button
-              type="button"
-              onClick={() => router.replace("/login")}
-              className="flex items-center text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="mr-2 h-3 w-3" />
-              Return to terminal
-            </button>
-          </div>
-        </form>
-      </div>
-    </main>
+    <OtpVerifyScreen
+      theme={theme}
+      sessionKey="admin-login"
+      pageBackground={`radial-gradient(circle at 12% -8%, ${theme.primary}26, transparent 55%), radial-gradient(circle at 108% 112%, ${theme.primary}1A, transparent 55%), #F5F7FA`}
+      icon={ShieldCheck}
+      title="Security verification"
+      description="Enter the 6-digit code we emailed you to finish signing in."
+      destination={maskEmail(ctx?.email)}
+      totalSeconds={600}
+      submitLabel="Authorize access"
+      onSubmit={handleSubmit}
+      resend={{ cooldown: 30, onResend: () => api.post("/auth/admin/resend-otp") }}
+      onExpiredAction={{ label: "Sign in again", onClick: () => router.replace("/login") }}
+      back={{ label: "Back to sign in", onClick: () => router.replace("/login") }}
+    />
   );
 }
