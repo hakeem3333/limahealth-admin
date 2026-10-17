@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { api } from "@/lib/axios";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -14,6 +14,15 @@ import {
 } from "lucide-react";
 
 export default function VerifyEmailPage() {
+  // useSearchParams needs a Suspense boundary in the app router.
+  return (
+    <Suspense fallback={null}>
+      <VerifyEmailContent />
+    </Suspense>
+  );
+}
+
+function VerifyEmailContent() {
   const [status, setStatus] = useState("loading"); // loading | success | error
   const [message, setMessage] = useState("");
   const params = useSearchParams();
