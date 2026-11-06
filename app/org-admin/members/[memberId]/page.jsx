@@ -26,6 +26,9 @@ import {
   UserCog,
   Check,
   X,
+  HeartPulse,
+  Smile,
+  Footprints,
 } from "lucide-react";
 
 export default function StudentProfilePage() {
@@ -124,6 +127,7 @@ export default function StudentProfilePage() {
       {/* Wellness Metrics - Using the fallback 'metrics' object */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2 space-y-8">
+          <WellnessScoreSection score={data.healthScore} />
           <Section
             title="7-Day Wellness Average"
             icon={<Activity className="h-5 w-5 text-blue-600" />}
@@ -163,6 +167,104 @@ export default function StudentProfilePage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* -----------------------------
+   Wellness Score
+------------------------------ */
+
+// The API scores risk (0 = calm, 100 = critical); a wellness score reads the
+// other way round, so everything here shows 100 − risk.
+const toWellness = (risk) => (risk === null || risk === undefined ? null : 100 - risk);
+
+const WELLNESS_LEVELS = {
+  LOW:      { label: "Doing well",    ring: "#10B981", pill: "bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-100 dark:border-green-500/20" },
+  MODERATE: { label: "Steady",        ring: "#818CF8", pill: "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20" },
+  HIGH:     { label: "Under strain",  ring: "#F59E0B", pill: "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-500/20" },
+  CRITICAL: { label: "Needs support", ring: "#EF4444", pill: "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-100 dark:border-red-500/20" },
+};
+
+const WELLNESS_COMPONENTS = [
+  { key: "biometric", label: "Vitals",   icon: Activity },
+  { key: "mood",      label: "Mood",     icon: Smile },
+  { key: "sleep",     label: "Sleep",    icon: Moon },
+  { key: "activity",  label: "Activity", icon: Footprints },
+];
+
+const barClass = (value) => (value >= 70 ? "bg-green-500" : value >= 45 ? "bg-amber-500" : "bg-red-500");
+
+function WellnessScoreSection({ score }) {
+  return (
+    <Section title="Wellness Score" icon={<HeartPulse className="h-5 w-5 text-blue-600" />}>
+      {!score ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          No score yet. It appears once this member syncs a wearable or logs a mood check-in.
+        </p>
+      ) : (
+        <WellnessScoreBody score={score} />
+      )}
+    </Section>
+  );
+}
+
+function WellnessScoreBody({ score }) {
+  const overall = toWellness(score.riskScore);
+  const level = WELLNESS_LEVELS[score.riskLevel] ?? WELLNESS_LEVELS.LOW;
+  const circumference = 2 * Math.PI * 42;
+
+  return (
+    <div className="flex flex-col md:flex-row md:items-center gap-8">
+      <div className="flex flex-col items-center gap-3 shrink-0">
+        <div className="relative h-32 w-32">
+          <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+            <circle cx="50" cy="50" r="42" fill="none" strokeWidth="9" className="stroke-gray-100 dark:stroke-gray-800" />
+            <circle
+              cx="50" cy="50" r="42" fill="none" strokeWidth="9" strokeLinecap="round"
+              stroke={level.ring}
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference * (1 - overall / 100)}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-4xl font-black text-gray-900 dark:text-white">{overall}</span>
+            <span className="text-[10px] font-bold text-gray-400">/ 100</span>
+          </div>
+        </div>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${level.pill}`}>
+          {level.label}
+        </span>
+        {score.scoredAt && (
+          <span className="text-[11px] text-gray-400">Updated {new Date(score.scoredAt).toLocaleString()}</span>
+        )}
+      </div>
+
+      {score.breakdown ? (
+        <div className="flex-1 space-y-4">
+          {WELLNESS_COMPONENTS.map(({ key, label, icon: Icon }) => {
+            const value = toWellness(score.breakdown[key]);
+            return (
+              <div key={key} className="flex items-center gap-3">
+                <Icon className="h-4 w-4 text-gray-400 shrink-0" />
+                <span className="w-16 text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wide">{label}</span>
+                <div className="flex-1 h-2.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  {value !== null && (
+                    <div className={`h-full rounded-full ${barClass(value)}`} style={{ width: `${Math.max(value, 3)}%` }} />
+                  )}
+                </div>
+                <span className={`w-14 text-right text-sm font-black ${value === null ? "text-gray-400 font-medium text-xs" : "text-gray-900 dark:text-white"}`}>
+                  {value === null ? "No data" : value}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="flex-1 text-sm text-gray-500 dark:text-gray-400">
+          A per-area breakdown will appear after the next score update.
+        </p>
+      )}
     </div>
   );
 }
